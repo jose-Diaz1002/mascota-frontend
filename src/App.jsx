@@ -4,6 +4,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './components/LoginPage';
 import PetDashboard from './components/PetDashboard';
+import RegisterPage from './components/RegisterPage';
 
 // Una función simple para verificar si el usuario tiene un token
 const isAuthenticated = () => {
@@ -20,6 +21,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} /> {/* 2. Añadir la ruta */}
         <Route 
           path="/dashboard" 
           element={
