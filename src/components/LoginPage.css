@@ -59,3 +59,14 @@
 .login-button:hover {
     background-color: #0056b3;
 }
+
+/* Añadir al final de LoginPage.css */
+
+.error-message {
+  color: #D8000C; /* Un color rojo para errores */
+  background-color: #FFD2D2; /* Un fondo rosa claro */
+  border: 1px solid #D8000C;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+}

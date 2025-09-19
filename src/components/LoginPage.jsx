@@ -1,53 +1,77 @@
-// LoginPage.jsx
+// src/components/LoginPage.jsx
 
 import React, { useState } from 'react';
-import './LoginPage.css'; // Importamos nuestros estilos CSS
+import axios from 'axios'; // 1. Importamos axios
+import './LoginPage.css';
+import { useNavigate } from 'react-router-dom';
 
 function LoginPage() {
-    // Estados para guardar el valor de los inputs
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+  const navigate = useNavigate(); // Hook para la navegación
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(''); // 2. Un estado para guardar mensajes de error
 
-    // Función que se ejecuta al enviar el formulario
-    const handleLogin = (event) => {
-        event.preventDefault(); // Evita que la página se recargue al hacer submit
-        console.log('Intentando iniciar sesión con:');
-        console.log('Usuario:', username);
-        console.log('Contraseña:', password);
-        // Próximo paso: Aquí haremos la llamada a la API
-    };
+  // Dentro de LoginPage.jsx, reemplaza tu función handleLogin por esta
 
-    return (
-        <div className="login-container">
-            <form className="login-form" onSubmit={handleLogin}>
-                <h1>Iniciar Sesión</h1>
+const handleLogin = async (event) => {
+  event.preventDefault();
+  setError('');
 
-                <div className="form-group">
-                    <label htmlFor="username">Nombre de Usuario</label>
-                    <input
-                        type="text"
-                        id="username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                    />
-                </div>
+  try {
+    const response = await axios.post('http://localhost:8080/api/auth/login', {
+      username: username,
+      password: password,
+    });
 
-                <div className="form-group">
-                    <label htmlFor="password">Contraseña</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
-                </div>
+    const token = response.data.token;
+    console.log('¡Login exitoso! Token:', token);
 
-                <button type="submit" className="login-button">Ingresar</button>
-            </form>
+    // Guardamos el token en el almacenamiento local del navegador
+    localStorage.setItem('token', token);
+
+    // Navegamos al dashboard
+    navigate('/dashboard');
+
+  } catch (err) {
+    console.error('Error en el login:', err);
+    setError('Usuario o contraseña incorrectos. Por favor, inténtalo de nuevo.');
+  }
+};
+
+  return (
+    <div className="login-container">
+      <form className="login-form" onSubmit={handleLogin}>
+        <h1>Iniciar Sesión</h1>
+
+        {/* 6. Mostramos el mensaje de error si existe */}
+        {error && <p className="error-message">{error}</p>}
+
+        <div className="form-group">
+          <label htmlFor="username">Nombre de Usuario</label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
+          />
         </div>
-    );
+
+        <div className="form-group">
+          <label htmlFor="password">Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        <button type="submit" className="login-button">Ingresar</button>
+      </form>
+    </div>
+  );
 }
 
 export default LoginPage;
