@@ -2,75 +2,95 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function PetDashboard() {
-  const [pets, setPets] = useState([]); // Estado para guardar la lista de mascotas
-  const [loading, setLoading] = useState(true); // Estado para saber si estamos cargando datos
-  const [error, setError] = useState(''); // Estado para cualquier error de la API
+  const [pets, setPets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newCreatureType, setNewCreatureType] = useState('Dragón');
+  const [newColor, setNewColor] = useState('');
+
+  const fetchPets = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8080/api/pets', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPets(response.data);
+    } catch (err) {
+      console.error("Error al obtener las mascotas:", err);
+      setError('No se pudieron cargar las mascotas.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Esta función se ejecuta solo una vez, cuando el componente se monta
-    const fetchPets = async () => {
-      try {
-        // 1. Obtenemos el token guardado del localStorage
-        const token = localStorage.getItem('token');
-
-        // 2. Hacemos la petición a la API, incluyendo el token en las cabeceras
-        const response = await axios.get('http://localhost:8080/api/pets', {
-          headers: {
-            Authorization: `Bearer ${token}` // Así nos autoriza el backend
-          }
-        });
-
-        // 3. Guardamos la lista de mascotas en el estado
-        setPets(response.data);
-      } catch (err) {
-        console.error("Error al obtener las mascotas:", err);
-        setError('No se pudieron cargar las mascotas.');
-      } finally {
-        setLoading(false); // Dejamos de cargar, ya sea con éxito o error
-      }
-    };
-
     fetchPets();
-  }, []); // El array vacío asegura que el efecto se ejecute solo una vez
+  }, []);
+
+  const handleCreatePet = async (e) => {
+    e.preventDefault();
+    if (!newName || !newColor) {
+      alert('Por favor, completa todos los campos.');
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const newPet = { name: newName, creatureType: newCreatureType, color: newColor };
+      await axios.post('http://localhost:8080/api/pets', newPet, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNewName('');
+      setNewColor('');
+      fetchPets();
+    } catch (err) {
+      console.error("Error al crear la mascota:", err);
+      setError('No se pudo crear la mascota.');
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     window.location.href = '/login';
   };
 
-  // --- Renderizado del componente ---
-  if (loading) {
-    return <div>Cargando mascotas...</div>;
-  }
-
-  if (error) {
-    return <div>{error}</div>;
-  }
-
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>¡Bienvenido a tu Guardería de Mascotas!</h1>
-        <button onClick={handleLogout} style={{ padding: '10px' }}>
-          Cerrar Sesión
-        </button>
+        <h1>Guardería de Mascotas</h1>
+        <button onClick={handleLogout} style={{ padding: '10px' }}>Cerrar Sesión</button>
       </div>
-
       <hr />
-
+      <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+        <h3>Crear una nueva criatura</h3>
+        <form onSubmit={handleCreatePet} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input type="text" value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nombre" style={{ padding: '8px' }} />
+          <select value={newCreatureType} onChange={e => setNewCreatureType(e.target.value)} style={{ padding: '8px' }}>
+            <option>Dragón</option>
+            <option>Unicornio</option>
+            <option>Extraterrestre</option>
+          </select>
+          <input type="text" value={newColor} onChange={e => setNewColor(e.target.value)} placeholder="Color (ej: rojo)" style={{ padding: '8px' }} />
+          <button type="submit" style={{ padding: '8px 12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>Crear</button>
+        </form>
+      </div>
       <h2>Tus Criaturas</h2>
-      {pets.length === 0 ? (
-        <p>No tienes ninguna mascota todavía. ¡Crea una!</p>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {pets.map(pet => (
-            <li key={pet.id} style={{ border: '1px solid #ccc', padding: '10px', marginBottom: '10px', borderRadius: '5px' }}>
-              <strong>Nombre:</strong> {pet.name} <br />
-              <strong>Tipo:</strong> {pet.creatureType} <br />
-              <strong>Color:</strong> {pet.color}
-            </li>
-          ))}
-        </ul>
+      {loading ? <p>Cargando...</p> : error ? <p style={{color: 'red'}}>{error}</p> : (
+        pets.length === 0 ? (
+          <p>No tienes ninguna mascota todavía. ¡Crea una!</p>
+        ) : (
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {pets.map(pet => (
+              <li key={pet.id} style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '10px', borderRadius: '5px', background: 'white' }}>
+                <strong>Nombre:</strong> {pet.name} <br />
+                <strong>Tipo:</strong> {pet.creatureType} <br />
+                <strong>Color:</strong> {pet.color} <br />
+                <strong>Ánimo:</strong> {pet.mood} | <strong>Energía:</strong> {pet.energyLevel}
+              </li>
+            ))}
+          </ul>
+        )
       )}
     </div>
   );
