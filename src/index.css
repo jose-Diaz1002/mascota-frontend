@@ -1,3 +1,8 @@
+/* src/index.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+/* ... (resto del css) ... */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -20,6 +25,13 @@ a {
 }
 a:hover {
   color: #535bf2;
+}
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif; /* ¡Aquí aplicamos la fuente! */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7f6; /* Un color de fondo suave */
 }
 
 body {
