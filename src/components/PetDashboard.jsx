@@ -1,184 +1,148 @@
-// src/components/PetDashboard.jsx
-
-// --- Importaciones ---
-// Importamos las librerías necesarias: React para el componente y sus hooks,
-// axios para las llamadas a la API, y el archivo CSS para los estilos.
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './PetDashboard.css'; 
-// Importamos la imagen del dragón desde la carpeta de assets.
-import dragonImage from '../assets/dragon.png';
+import PetCard from './PetCard.jsx';
+import './PetDashboard.css';
 
 function PetDashboard() {
-  // --- Estados del Componente ---
-  // useState nos permite guardar información que cambia y que refresca la vista.
-  const [pets, setPets] = useState([]); // Almacena la lista de mascotas del usuario.
-  const [loading, setLoading] = useState(true); // Indica si estamos esperando una respuesta de la API.
-  const [error, setError] = useState(''); // Guarda cualquier mensaje de error para mostrarlo al usuario.
-  
-  // Estados para el formulario de creación de mascotas.
-  const [newName, setNewName] = useState('');
-  const [newCreatureType, setNewCreatureType] = useState('Dragón');
-  const [newColor, setNewColor] = useState('');
+  const [pets, setPets] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Estado para controlar qué mascota se está editando.
-  // Si es 'null', no hay ninguna en modo edición. Si contiene un objeto mascota, se mostrará el formulario de edición.
-  const [editingPet, setEditingPet] = useState(null);
+  // Estados para el formulario de creación
+  const [name, setName] = useState('');
+  const [color, setColor] = useState('#a9e4ff'); // Un color inicial más bonito
+  const [features, setFeatures] = useState('');
 
-  // --- Lógica de Datos (API) ---
+  const fetchPets = async () => {
+    // ... (Esta función se queda exactamente igual que en el mensaje anterior)
+    setLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const role = localStorage.getItem('role');
+      const endpoint = role === 'ROLE_ADMIN' ? '/api/pets/all' : '/api/pets';
 
-  // useEffect se ejecuta cuando el componente se "monta" (aparece por primera vez).
-  // El array vacío `[]` al final asegura que solo se ejecute una vez.
+      const response = await axios.get(`http://localhost:8080${endpoint}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPets(response.data);
+    } catch (error) {
+      console.error("Error al cargar las mascotas", error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+        handleLogout();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchPets();
   }, []);
 
-  // Función para obtener todas las mascotas del usuario desde el backend.
-  const fetchPets = async () => {
-    try {
-      setLoading(true); // Empezamos a cargar
-      const token = localStorage.getItem('token'); // Recuperamos el token guardado en el login
-      const response = await axios.get('http://localhost:8080/api/pets', {
-        headers: { Authorization: `Bearer ${token}` } // Enviamos el token para la autorización
-      });
-      setPets(response.data); // Guardamos las mascotas en el estado
-    } catch (err) {
-      console.error("Error al obtener las mascotas:", err);
-      setError('No se pudieron cargar las mascotas. Por favor, recarga la página.');
-    } finally {
-      setLoading(false); // Terminamos de cargar, ya sea con éxito o error
-    }
-  };
-
-  // --- Manejadores de Eventos (Handlers) ---
-
-  // Se ejecuta al enviar el formulario de creación.
   const handleCreatePet = async (e) => {
-    e.preventDefault(); // Evita que la página se recargue
+    // ... (Esta función se queda exactamente igual)
+    e.preventDefault();
+    if (!name || !features) {
+      alert("El nombre y las características no pueden estar vacíos.");
+      return;
+    }
+    const token = localStorage.getItem('token');
     try {
-      const token = localStorage.getItem('token');
-      const newPet = { name: newName, creatureType: newCreatureType, color: newColor };
-      await axios.post('http://localhost:8080/api/pets', newPet, {
+      await axios.post('http://localhost:8080/api/pets', { name, color, specialFeatures: features }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      // Limpiamos los campos y recargamos la lista de mascotas para ver la nueva
-      setNewName(''); 
-      setNewColor(''); 
-      setNewCreatureType('Dragón');
+      setName('');
+      setColor('#a9e4ff');
+      setFeatures('');
       fetchPets();
-    } catch (err) {
-      console.error("Error al crear la mascota:", err);
-      setError('No se pudo crear la mascota.');
-    }
-  };
-  
-  // Se ejecuta al enviar el formulario de edición.
-  const handleUpdatePet = async (e) => {
-    e.preventDefault();
-    try {
-        const token = localStorage.getItem('token');
-        const updatedPetData = { name: editingPet.name, creatureType: editingPet.creatureType, color: editingPet.color };
-        await axios.put(`http://localhost:8080/api/pets/${editingPet.id}`, updatedPetData, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        setEditingPet(null); // Salimos del modo edición
-        fetchPets(); // Recargamos la lista para ver los cambios
-    } catch (err) {
-        console.error("Error al actualizar la mascota:", err);
-        setError('No se pudo actualizar la mascota.');
+    } catch (error) {
+      console.error("Error al crear la mascota", error);
     }
   };
 
-  // Se ejecuta al hacer clic en el botón "Eliminar".
-  const handleDeletePet = async (petId) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar esta mascota?")) {
+  const updatePetState = (updatedPet) => {
+    setPets(currentPets => currentPets.map(p => p.id === updatedPet.id ? updatedPet : p));
+  };
+
+  const handleFeed = async (petId) => {
+    // ... (Esta función se queda exactamente igual)
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.post(`http://localhost:8080/api/pets/${petId}/feed`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      updatePetState(res.data);
+    } catch (error) {
+      console.error("Error al alimentar", error);
+    }
+  };
+
+  const handleCuddle = async (petId) => {
+    // ... (Esta función se queda exactamente igual)
+    const token = localStorage.getItem('token');
+    try {
+      const res = await axios.post(`http://localhost:8080/api/pets/${petId}/cuddle`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      updatePetState(res.data);
+    } catch (error) {
+      console.error("Error al mimar", error);
+    }
+  };
+
+  const handleDelete = async (petId) => {
+    // ... (Esta función se queda exactamente igual)
+    if (window.confirm("¿Estás seguro de que quieres liberar a esta criatura?")) {
+      const token = localStorage.getItem('token');
       try {
-        const token = localStorage.getItem('token');
-        await axios.delete(`http://localhost:8080/api/pets/${petId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        fetchPets(); // Recargamos la lista
-      } catch (err) {
-        console.error("Error al eliminar la mascota:", err);
-        setError('No se pudo eliminar la mascota.');
+        await axios.delete(`http://localhost:8080/api/pets/${petId}`, { headers: { Authorization: `Bearer ${token}` } });
+        fetchPets();
+      } catch (error) {
+        console.error("Error al eliminar la mascota", error);
       }
     }
   };
 
-  // Se ejecuta al hacer clic en "Cerrar Sesión".
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Borramos el token
-    window.location.href = '/login'; // Redirigimos al login
+    // ... (Esta función se queda exactamente igual)
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    window.location.href = '/login';
   };
 
-  // --- Renderizado del Componente (lo que se ve en pantalla) ---
   return (
-    <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h1>Guardería de Mascotas</h1>
-        <button onClick={handleLogout} className="logout-button">Cerrar Sesión</button>
-      </div>
-      
-      <div className="create-pet-form">
-        <h3>Añadir Nueva Criatura</h3>
-        <form onSubmit={handleCreatePet} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Nombre"/>
-          <select value={newCreatureType} onChange={e => setNewCreatureType(e.target.value)}>
-            <option>Dragón</option>
-            <option>Unicornio</option>
-            <option>Extraterrestre</option>
-          </select>
-          <input value={newColor} onChange={e => setNewColor(e.target.value)} placeholder="Color"/>
-          <button type="submit">Crear Mascota</button>
-        </form>
-      </div>
+    <div className="page-container">
+      <main className="dashboard-main">
+        <h1>Tu Espacio de Humo</h1>
 
-      <h2>Tus Criaturas</h2>
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      
-      {/* Mostramos un mensaje de carga mientras 'loading' sea true */}
-      {loading ? <p>Cargando...</p> : (
-        <ul className="pet-list">
-          {pets.length === 0 && <p>No tienes ninguna mascota todavía. ¡Crea una!</p>}
-          
-          {/* Usamos .map para crear un elemento <li> por cada mascota en el estado */}
-          {pets.map(pet => (
-            <li key={pet.id} className="pet-item">
-              
-              {/* Si la mascota que estamos mostrando es la que se está editando... */}
-              {editingPet && editingPet.id === pet.id ? (
-                // ...mostramos el formulario de edición.
-                <form onSubmit={handleUpdatePet} style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '100%' }}>
-                  <img src={dragon} alt="pet" className="pet-image"/>
-                  <input value={editingPet.name} onChange={e => setEditingPet({...editingPet, name: e.target.value})} />
-                  <select value={editingPet.creatureType} onChange={e => setEditingPet({...editingPet, creatureType: e.target.value})}>
-                    <option>Dragón</option><option>Unicornio</option><option>Extraterrestre</option>
-                  </select>
-                  <input value={editingPet.color} onChange={e => setEditingPet({...editingPet, color: e.target.value})} />
-                  <div style={{ marginLeft: 'auto' }}>
-                    <button type="submit">Guardar</button>
-                    <button type="button" onClick={() => setEditingPet(null)}>Cancelar</button>
-                  </div>
-                </form>
-              ) : (
-                // ...si no, mostramos la vista normal.
-                <>
-                  <img src={pet.creatureType === 'Dragón' ? dragonImage : undefined} alt={pet.creatureType} className="pet-image"/>
-                  <div style={{ flexGrow: 1 }}>
-                    <strong>{pet.name}</strong> ({pet.creatureType} {pet.color})
-                  </div>
-                  <div>
-                    <button onClick={() => setEditingPet(pet)}>Editar</button>
-                    <button onClick={() => handleDeletePet(pet.id)}>Eliminar</button>
-                  </div>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+        {/* --- FORMULARIO DE CREACIÓN (AHORA SIEMPRE VISIBLE) --- */}
+        <div className="creation-hub">
+          <h2>Añade una nueva criatura</h2>
+          <form onSubmit={handleCreatePet} className="creation-form">
+            <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Nombre" required />
+            <textarea value={features} onChange={e => setFeatures(e.target.value)} placeholder="Características especiales (ej: 'brilla en la oscuridad')" required />
+            <div className='color-picker-wrapper'>
+              <label>Color:</label>
+              <input type="color" value={color} onChange={e => setColor(e.target.value)} />
+            </div>
+            <button type="submit">Crear</button>
+          </form>
+        </div>
+
+        <hr className="separator" />
+
+        {/* --- ZONA DE MASCOTAS --- */}
+        {loading ? <p>Cargando tus criaturas...</p> : (
+          pets.length === 0 ? (
+            <p>Aún no tienes ninguna mascota. ¡Crea una usando el formulario de arriba!</p>
+          ) : (
+            <div className="pets-grid">
+              {pets.map(pet => (
+                <PetCard key={pet.id} pet={pet} onFeed={handleFeed} onCuddle={handleCuddle} onDelete={handleDelete} />
+              ))}
+            </div>
+          )
+        )}
+      </main>
+      <footer className="dashboard-footer">
+        <button onClick={handleLogout}>Cerrar Sesión</button>
+      </footer>
     </div>
   );
 }
-
 export default PetDashboard;
