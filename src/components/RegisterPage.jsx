@@ -1,9 +1,8 @@
-// src/components/RegisterPage.jsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import './LoginPage.css'; // Reutilizamos los mismos estilos
+import './LoginPage.css';
+import AuthLayout from './AuthLayout';
 
 function RegisterPage() {
   const [username, setUsername] = useState('');
@@ -21,20 +20,25 @@ function RegisterPage() {
     }
 
     try {
-      // Llamamos al endpoint de registro
       const response = await axios.post('http://localhost:8080/api/auth/register', {
         username: username,
         password: password,
       });
 
-      // Si el registro es exitoso, guardamos el token y vamos al dashboard
+      // --- CORRECCIÓN ---
+      // Si el registro es exitoso, solo guardamos el token.
+      // No decodificamos nada aquí, ya que la respuesta de registro es simple.
       const token = response.data.token;
       localStorage.setItem('token', token);
+
+      // Asignamos el rol por defecto para cualquier nuevo usuario.
+      localStorage.setItem('role', 'ROLE_USER');
+
       navigate('/dashboard');
 
     } catch (err) {
       console.error('Error en el registro:', err);
-      if (err.response && err.response.data) {
+      if (err.response && err.response.status === 400) {
         setError('El nombre de usuario ya existe. Por favor, elige otro.');
       } else {
         setError('No se pudo completar el registro. Inténtalo de nuevo.');
@@ -43,7 +47,7 @@ function RegisterPage() {
   };
 
   return (
-    <div className="login-container">
+    <AuthLayout>
       <form className="login-form" onSubmit={handleRegister}>
         <h1>Crear Cuenta</h1>
         {error && <p className="error-message">{error}</p>}
@@ -75,7 +79,7 @@ function RegisterPage() {
           ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión aquí</Link>
         </p>
       </form>
-    </div>
+    </AuthLayout>
   );
 }
 

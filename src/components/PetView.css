@@ -1,0 +1,30 @@
+/* src/components/PetView.css */
+.pet-view-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* background-image: url('../assets/accessories/fondo-campo.png'); */
+  background-size: cover;
+  background-position: center;
+}
+
+.pet-display {
+  position: relative; /* Contenedor principal para los accesorios */
+  width: 300px; /* Ajusta el tamaño de tu mascota */
+  height: 300px; /* Ajusta el tamaño de tu mascota */
+}
+
+.pet-base {
+  width: 100%;
+  height: 100%;
+}
+
+.pet-accessory {
+  position: absolute; /* ¡La clave! Permite superponer imágenes */
+  width: 100%;
+  height: 100%;
+  left: 0;
+  top: 0;
+}

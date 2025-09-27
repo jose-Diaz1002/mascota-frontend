@@ -1,28 +1,35 @@
 /* src/components/PetDashboard.css */
-.page-container {
-  display: flex; flex-direction: column; min-height: 100vh; background-color: #f0f8ff;
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
 }
-.dashboard-main {
-  flex-grow: 1; display: flex; flex-direction: column; align-items: center;
-  padding: 20px;
+
+.control-panel {
+  width: 400px;
+  background-color: #ffffff;
+  padding: 30px;
+  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto; /* Para scroll si hay mucho contenido */
 }
-.dashboard-main h1 { color: #333; }
-.creation-hub {
-  background: white; padding: 30px; border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center;
-  width: 100%; max-width: 400px;
+
+.pet-view-area {
+  flex-grow: 1;
+  background-color: #f0f8ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.creation-form {
-  display: flex; flex-direction: column; gap: 15px; margin-top: 20px;
+
+.separator {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 20px 0;
 }
-.creation-form input, .creation-form textarea {
-  padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-family: inherit;
-}
-.pets-grid {
-  display: grid; grid-template-columns: 1fr;
-  gap: 20px; width: 100%; justify-items: center;
-}
-.add-more-text { margin-top: 30px; color: #555; }
-.dashboard-footer {
-  padding: 20px; text-align: center; background-color: #e3f2fd;
+
+.no-pets-message {
+  text-align: center;
+  color: #555;
 }
