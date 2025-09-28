@@ -1,39 +1,51 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import './PetView.css';
 
-// Importa las imágenes que acabas de guardar
-import petBaseImg from '../assets/accessories/mascota-base.png';
+// --- 1. IMPORTA LAS IMÁGENES COMPLETAS ---
+import petHappyImg from '../assets/pets/mascota-feliz.png';
+import petSadImg from '../assets/pets/mascota-triste.png';
+import petHungryImg from '../assets/pets/mascota-hambrienta.png';
+import petNeutralImg from '../assets/pets/mascota-neutral.png';
+
+// Importa los accesorios
 import hatWizardImg from '../assets/accessories/sombrero-mago.png';
 import shirtStripedImg from '../assets/accessories/camiseta-rayas.png';
 
-// Un mapa para asociar el nombre del accesorio con su imagen importada
 const accessoryMap = {
-  hat: {
-    'sombrero-mago': hatWizardImg,
-  },
-  shirt: {
-    'camiseta-rayas': shirtStripedImg,
-  },
+  hat: { 'sombrero-mago': hatWizardImg },
+  shirt: { 'camiseta-rayas': shirtStripedImg },
 };
 
+// --- 2. LA FUNCIÓN AHORA DEVUELVE LA IMAGEN COMPLETA CORRECTA ---
+const getPetImage = (hunger, happiness) => {
+  if (hunger > 70) return petHungryImg;
+  if (happiness < 30) return petSadImg;
+  if (happiness < 60) return petNeutralImg;
+  return petHappyImg;
+};
+
+// (La función de animación se queda igual)
+const getPetAnimation = (hunger, happiness) => { /*...*/ };
+
 function PetView({ pet }) {
-  if (!pet) return null; // No mostrar nada si no hay una mascota seleccionada
+  if (!pet) return null;
+
+  const petAnimation = getPetAnimation(pet.hunger, pet.happiness);
+  const petImageSrc = getPetImage(pet.hunger, pet.happiness); // Obtenemos la imagen correcta
 
   return (
     <div className="pet-view-container">
-      {/* Mostramos la imagen de fondo si existe */}
-      {/* <img src={...} className="background-image" /> */}
-
-      <div className="pet-display">
-        {/* 1. La imagen base de la mascota */}
-        <img src={petBaseImg} alt="Mascota" className="pet-base" style={{ filter: `hue-rotate(${pet.color || 0}deg)` }}/>
-
-        {/* 2. Superponemos la camiseta si tiene una equipada */}
+      <motion.div className="pet-display" animate={petAnimation}>
+        
+        {/* --- 3. MOSTRAMOS LA IMAGEN COMPLETA QUE CORRESPONDE --- */}
+        <img src={petImageSrc} alt="Mascota" className="pet-base" style={{ filter: `hue-rotate(${pet.color || 0}deg)` }}/>
+        
+        {/* Los accesorios se superponen sobre la imagen completa */}
         {pet.shirt && <img src={accessoryMap.shirt[pet.shirt]} alt="Camiseta" className="pet-accessory shirt" />}
-
-        {/* 3. Superponemos el sombrero si tiene uno equipado */}
         {pet.hat && <img src={accessoryMap.hat[pet.hat]} alt="Sombrero" className="pet-accessory hat" />}
-      </div>
+
+      </motion.div>
     </div>
   );
 }

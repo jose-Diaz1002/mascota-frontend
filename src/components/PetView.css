@@ -5,6 +5,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden; /* <-- para controlar el scroll*/
   /* background-image: url('../assets/accessories/fondo-campo.png'); */
   background-size: cover;
   background-position: center;
@@ -12,8 +13,9 @@
 
 .pet-display {
   position: relative; /* Contenedor principal para los accesorios */
-  width: 300px; /* Ajusta el tamaño de tu mascota */
-  height: 300px; /* Ajusta el tamaño de tu mascota */
+  width: 800px; /* Ajusta el tamaño de tu mascota */
+  height: 800px; /* Ajusta el tamaño de tu mascota */
+  top: 60px
 }
 
 .pet-base {

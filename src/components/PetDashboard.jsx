@@ -14,7 +14,12 @@ function PetDashboard() {
 
   const activePet = pets.length > 0 ? pets[0] : null;
 
-  // useCallback memoriza la función para que no se cree de nuevo en cada render
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.href = "/login";
+  }, []);
+
   const fetchPets = useCallback(async () => {
     setLoading(true);
     try {
@@ -32,17 +37,28 @@ function PetDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []); // El array vacío significa que la función nunca cambia
+  }, [handleLogout]);
 
+  // En PetDashboard.jsx
+
+  // Reemplaza tu useEffect actual con este
   useEffect(() => {
+    // 1. Llama a la función una vez al cargar la página
     fetchPets();
-  }, [fetchPets]); // Se ejecuta solo cuando fetchPets cambia (una vez)
 
-  const updatePetState = (updatedPet) => {
+    // 2. Establece un intervalo que llama a fetchPets cada 30 segundos
+    const intervalId = setInterval(fetchPets, 10000); // 30000 milisegundos = 30 segundos
+
+    // 3. Función de limpieza: se ejecuta cuando sales de la página
+    //    para detener el intervalo y evitar problemas de memoria.
+    return () => clearInterval(intervalId);
+  }, [fetchPets]); // El efecto depende de la función fetchPets (que está memorizada con useCallback)
+
+  const updatePetState = useCallback((updatedPet) => {
     setPets(currentPets => currentPets.map(p => p.id === updatedPet.id ? updatedPet : p));
-  };
+  }, []);
 
-  const handleCreatePet = async (e) => {
+  const handleCreatePet = useCallback(async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
@@ -55,56 +71,55 @@ function PetDashboard() {
     } catch (error) {
       console.error("Error al crear la mascota", error);
     }
-  };
+  }, [newName, newColor, fetchPets]);
   
-  const makePetRequest = async (url, petId) => {
+  const handleFeed = useCallback(async (petId) => {
     const token = localStorage.getItem('token');
-    try {
-        const res = await axios.post(url, {}, { headers: { Authorization: `Bearer ${token}` } });
-        updatePetState(res.data);
-    } catch (error) {
-        console.error(`Error en la petición a ${url}`, error);
-    }
-  };
+    const res = await axios.post(`http://localhost:8080/api/pets/${petId}/feed`, {}, { headers: { Authorization: `Bearer ${token}` } });
+    updatePetState(res.data);
+  }, [updatePetState]);
 
-  const handleFeed = (petId) => makePetRequest(`http://localhost:8080/api/pets/${petId}/feed`, petId);
-  const handleCuddle = (petId) => makePetRequest(`http://localhost:8080/api/pets/${petId}/cuddle`, petId);
-
-  const handleEquipAccessory = async (petId, accessoryType, accessoryName) => {
+  const handleCuddle = useCallback(async (petId) => {
     const token = localStorage.getItem('token');
-    try {
-      const res = await axios.post(`http://localhost:8080/api/pets/${petId}/equip`, 
-        { accessoryType, accessoryName: accessoryName || '' },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      updatePetState(res.data);
-    } catch (error) {
-      console.error(`Error al equipar ${accessoryType}:`, error);
-    }
-  };
+    const res = await axios.post(`http://localhost:8080/api/pets/${petId}/cuddle`, {}, { headers: { Authorization: `Bearer ${token}` } });
+    updatePetState(res.data);
+  }, [updatePetState]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "/login";
-  };
+  const handleEquipAccessory = useCallback(async (petId, accessoryType, accessoryName) => {
+    const token = localStorage.getItem('token');
+    const res = await axios.post(`http://localhost:8080/api/pets/${petId}/equip`, 
+      { accessoryType, accessoryName: accessoryName || '' },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    updatePetState(res.data);
+  }, [updatePetState]);
   
+  const handleDelete = useCallback(async (petId) => {
+    if (window.confirm("¿Estás seguro de que quieres liberar a esta criatura?")) {
+      const token = localStorage.getItem('token');
+      try {
+        await axios.delete(`http://localhost:8080/api/pets/${petId}`, { headers: { Authorization: `Bearer ${token}` } });
+        fetchPets();
+      } catch (error) {
+        console.error("Error al eliminar la mascota", error);
+      }
+    }
+  }, [fetchPets]);
+
   return (
     <div className="dashboard-layout">
       <div className="control-panel">
         <h2>Panel de Control</h2>
         <hr className="separator" />
-        {loading ? <p>Cargando...</p> : activePet ? (
+        {loading && pets.length === 0 ? <p>Cargando...</p> : activePet ? (
           <>
             <PetCard 
               pet={activePet} 
               onFeed={handleFeed} 
               onCuddle={handleCuddle}
-              onCustomize={() => setAccessoryPanelOpen(true)} 
+              onCustomize={() => setAccessoryPanelOpen(true)}
+              onDelete={handleDelete}
             />
-            <hr className="separator" />
-            <p>Personaliza a {activePet.name}:</p>
-            {/* Aquí podríamos mostrar un panel de personalización fijo en lugar de un modal */}
           </>
         ) : (
           <div className="creation-hub">
@@ -123,10 +138,7 @@ function PetDashboard() {
       </div>
       <div className="pet-view-area">
         {activePet ? <PetView pet={activePet} /> : (
-          <div className="no-pets-message">
-            <h1>¡Bienvenido!</h1>
-            <p>Crea una mascota para empezar.</p>
-          </div>
+          <div className="no-pets-message"><h1>¡Bienvenido!</h1></div>
         )}
       </div>
       {isAccessoryPanelOpen && activePet && (

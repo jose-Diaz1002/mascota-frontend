@@ -21,6 +21,10 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  /* --- AÑADE ESTAS LÍNEAS --- */
+  background-image: url('../assets/habitacion.png');
+  background-size: cover;
+  background-position: center;
 }
 
 .separator {
