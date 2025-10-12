@@ -1,53 +1,75 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import './PetView.css';
+"use client"
+import { motion } from "framer-motion"
+import "./PetView.css"
 
-// --- 1. IMPORTA LAS IMÁGENES COMPLETAS ---
-import petHappyImg from '../assets/pets/mascota-feliz.png';
-import petSadImg from '../assets/pets/mascota-triste.png';
-import petHungryImg from '../assets/pets/mascota-hambrienta.png';
-import petNeutralImg from '../assets/pets/mascota-neutral.png';
+// --- 1. IMPORTA TUS NUEVOS GIFs ---
+// (Asegúrate de que los nombres de archivo coincidan con los que guardaste)
+import petNormalImg from '../assets/pets/normal.webp';
+import petHungryImg from '../assets/pets/hambriento.webp';
+import petHappyImg from '../assets/pets/feliz.webp';
 
-// Importa los accesorios
-import hatWizardImg from '../assets/accessories/sombrero-mago.png';
-import shirtStripedImg from '../assets/accessories/camiseta-rayas.png';
+const hatWizardImg = "/wizard-hat-accessory.jpg"
+const shirtStripedImg = "/striped-shirt-accessory.jpg"
 
 const accessoryMap = {
-  hat: { 'sombrero-mago': hatWizardImg },
-  shirt: { 'camiseta-rayas': shirtStripedImg },
-};
+  hat: { "sombrero-mago": hatWizardImg },
+  shirt: { "camiseta-rayas": shirtStripedImg },
+}
 
-// --- 2. LA FUNCIÓN AHORA DEVUELVE LA IMAGEN COMPLETA CORRECTA ---
 const getPetImage = (hunger, happiness) => {
-  if (hunger > 70) return petHungryImg;
-  if (happiness < 30) return petSadImg;
-  if (happiness < 60) return petNeutralImg;
-  return petHappyImg;
-};
+  if (hunger > 70) return petHungryImg
+  if (happiness > 80) return petHappyImg
+  return petNormalImg
+}
 
-// (La función de animación se queda igual)
-const getPetAnimation = (hunger, happiness) => { /*...*/ };
+const getPetAnimation = (hunger, happiness) => {
+  if (hunger > 70) {
+    return { y: [0, -10, 0], transition: { duration: 2, repeat: Number.POSITIVE_INFINITY } }
+  }
+  if (happiness > 80) {
+    return {
+      rotate: [0, -5, 5, -5, 0],
+      transition: { duration: 0.5, repeat: Number.POSITIVE_INFINITY, repeatDelay: 1 },
+    }
+  }
+  return { y: [0, -5, 0], transition: { duration: 3, repeat: Number.POSITIVE_INFINITY } }
+}
 
-function PetView({ pet }) {
-  if (!pet) return null;
+function PetView({ pet, onMouseEnter, onMouseLeave }) {
+  if (!pet) return null
 
-  const petAnimation = getPetAnimation(pet.hunger, pet.happiness);
-  const petImageSrc = getPetImage(pet.hunger, pet.happiness); // Obtenemos la imagen correcta
+  const petAnimation = getPetAnimation(pet.hunger, pet.happiness)
+  const petImageSrc = getPetImage(pet.hunger, pet.happiness)
 
   return (
     <div className="pet-view-container">
-      <motion.div className="pet-display" animate={petAnimation}>
-        
-        {/* --- 3. MOSTRAMOS LA IMAGEN COMPLETA QUE CORRESPONDE --- */}
-        <img src={petImageSrc} alt="Mascota" className="pet-base" style={{ filter: `hue-rotate(${pet.color || 0}deg)` }}/>
-        
-        {/* Los accesorios se superponen sobre la imagen completa */}
-        {pet.shirt && <img src={accessoryMap.shirt[pet.shirt]} alt="Camiseta" className="pet-accessory shirt" />}
-        {pet.hat && <img src={accessoryMap.hat[pet.hat]} alt="Sombrero" className="pet-accessory hat" />}
+      <motion.div
+        className="pet-display"
+        animate={petAnimation}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        style={{ cursor: "pointer" }}
+      >
+        <img
+          src={petImageSrc || "/placeholder.svg"}
+          alt="Mascota"
+          className="pet-base"
+          style={{ filter: `hue-rotate(${pet.color || 0}deg)` }}
+        />
 
+        {pet.shirt && (
+          <img
+            src={accessoryMap.shirt[pet.shirt] || "/placeholder.svg"}
+            alt="Camiseta"
+            className="pet-accessory shirt"
+          />
+        )}
+        {pet.hat && (
+          <img src={accessoryMap.hat[pet.hat] || "/placeholder.svg"} alt="Sombrero" className="pet-accessory hat" />
+        )}
       </motion.div>
     </div>
-  );
+  )
 }
 
-export default PetView;
+export default PetView

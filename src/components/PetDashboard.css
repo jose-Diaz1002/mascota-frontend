@@ -1,31 +1,29 @@
-/* src/components/PetDashboard.css */
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
 }
 
 .control-panel {
-  width: 400px;
-  background-color: #ffffff;
+  width: 350px;
+  background-color: #8dca909f;
   padding: 30px;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
-  overflow-y: auto; /* Para scroll si hay mucho contenido */
+  overflow-y: auto;
 }
 
-.pet-view-area {
+ .pet-view-area {
   flex-grow: 1;
-  background-color: #f0f8ff;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* --- AÑADE ESTAS LÍNEAS --- */
+  
+  /* --- AQUÍ SE LLAMA AL FONDO --- */
   background-image: url('../assets/habitacion.png');
   background-size: cover;
   background-position: center;
-}
+} 
 
 .separator {
   border: 0;
@@ -36,4 +34,71 @@
 .no-pets-message {
   text-align: center;
   color: #555;
+}
+
+.creation-hub {
+  background: #5dd189;
+  padding: 25px;
+  border-radius: 8px;
+}
+
+.creation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.creation-form input[type="text"] {
+  padding: 12px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 1em;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.creation-form input[type="color"] {
+  width: 60px;
+  height: 40px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.color-picker-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.creation-form button {
+  padding: 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.creation-form button:hover {
+  background-color: #218838;
+}
+
+.logout-button {
+  padding: 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
 }

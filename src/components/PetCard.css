@@ -1,43 +1,105 @@
-/* src/components/PetCard.css */
 .pet-card {
   background: white;
   border-radius: 15px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   display: flex;
   padding: 20px;
   gap: 20px;
   width: 100%;
   max-width: 500px;
 }
-.pet-visual { text-align: center; }
-.pet-face { font-size: 5rem; line-height: 1; }
+
+.pet-visual {
+  text-align: center;
+  position: relative;
+}
+
+.pet-face {
+  font-size: 5rem;
+  line-height: 1;
+}
+
 .pet-body {
   width: 100px;
   height: 60px;
   border-radius: 50% 50% 20% 20% / 60% 60% 40% 40%;
   margin-top: -20px;
 }
-.pet-info { flex-grow: 1; }
-.pet-info h3 { margin: 0 0 5px; }
-.pet-info p { font-style: italic; color: #555; }
-.status-bar { margin: 10px 0; }
-.status-bar label { font-size: 0.9em; }
-.status-bar progress { width: 100%; }
-.actions { margin-top: 15px; display: flex; gap: 10px; }
-.actions button {
-  padding: 8px 12px; border-radius: 5px; border: none; cursor: pointer;
+
+.pet-info {
+  flex-grow: 1;
 }
-.delete-btn { background-color: #f44336; color: white; }
-/* Añadir a src/components/PetCard.css */
-.pet-visual {
-  position: relative; /* Necesario para posicionar el sombrero */
+
+.pet-info h3 {
+  margin: 0 0 5px;
+}
+
+.pet-info p {
+  font-style: italic;
+  color: #555;
+}
+
+.status-bar {
+  margin: 10px 0;
+}
+
+.status-bar label {
+  font-size: 0.9em;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.status-bar progress {
+  width: 100%;
+  height: 20px;
+}
+
+.actions {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.actions button {
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.actions button:hover {
+  background-color: #0056b3;
+}
+
+.pet-card-info h3 {
+  font-size: 2rem;
+  margin: 0 0 15px;
+  color: #de6e18;
   text-align: center;
 }
+
+.delete-btn {
+  background-color: #f44336 !important;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f !important;
+}
+
 .pet-hat {
   position: absolute;
-  top: -15px; /* Ajusta la posición vertical del sombrero */
+  top: -15px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 2.5rem;
   z-index: 1;
+}
+
+.happiness-bar {
+  accent-color: #4caf50;
 }
