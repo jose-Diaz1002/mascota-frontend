@@ -1,104 +1,214 @@
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-  font-family: "Poppins", sans-serif;
+/* ESTILOS PARA EL DASHBOARD DE MASCOTAS */
+
+/* Contenedor principal: Layout de dos columnas (panel izquierdo + área de visualización) */
+.dashboard-container {
+  display: flex; /* Flexbox para layout horizontal */
+  height: 100vh; /* Altura completa de la ventana */
+  overflow: hidden; /* Evita scroll en el contenedor principal */
 }
 
+/* PANEL DE CONTROL IZQUIERDO */
 .control-panel {
-  width: 350px;
-  background-color: #8dca909f;
-  padding: 30px;
+  width: 350px; /* Ancho fijo del panel */
+  background-color: #8dca909f; /* Verde semi-transparente */
+  padding: 2rem;
   display: flex;
-  flex-direction: column;
-  overflow-y: auto;
+  flex-direction: column; /* Elementos apilados verticalmente */
+  gap: 1.5rem; /* Espacio entre elementos */
+  overflow-y: auto; /* Scroll vertical si el contenido es muy largo */
 }
 
- .pet-view-area {
-  flex-grow: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  
-  /* --- AQUÍ SE LLAMA AL FONDO --- */
-  background-image: url('../assets/habitacion.png');
-  background-size: cover;
-  background-position: center;
-} 
+/* Información del usuario en la parte superior */
+.user-info {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
 
+.user-info h2 {
+  color: white;
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Botón para acceder al panel de administración */
+.admin-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.admin-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Separador horizontal */
 .separator {
   border: 0;
-  border-top: 1px solid #eee;
-  margin: 20px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  margin: 0;
 }
 
-.no-pets-message {
-  text-align: center;
-  color: #555;
-}
-
+/* Hub de creación de mascotas */
 .creation-hub {
   background: #5dd189;
-  padding: 25px;
+  padding: 1.5rem;
   border-radius: 8px;
 }
 
-.creation-form {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  margin-top: 20px;
+.creation-hub h3 {
+  color: white;
+  margin-top: 0;
+  margin-bottom: 1rem;
 }
 
-.creation-form input[type="text"] {
-  padding: 12px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-family: inherit;
-  font-size: 1em;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.creation-form input[type="color"] {
-  width: 60px;
-  height: 40px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.color-picker-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-}
-
-.creation-form button {
-  padding: 12px;
+/* Botón para crear mascota */
+.create-pet-button {
   background-color: #28a745;
   color: white;
   border: none;
-  border-radius: 5px;
-  font-size: 1em;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s;
+  width: 100%;
 }
 
-.creation-form button:hover {
+.create-pet-button:hover {
   background-color: #218838;
 }
 
+/* Formulario de creación */
+.create-pet-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-group {
+  margin-bottom: 0;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #666;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+}
+
+/* Botones del formulario */
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.submit-button,
+.cancel-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Mensajes de error */
+.error-message {
+  color: #ffcdd2;
+  background-color: rgba(244, 67, 54, 0.2);
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Botón de cerrar sesión */
 .logout-button {
-  padding: 12px;
   background-color: #dc3545;
   color: white;
   border: none;
-  border-radius: 5px;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.3s;
+  margin-top: auto; /* Empuja el botón hacia abajo */
 }
 
 .logout-button:hover {
   background-color: #c82333;
+}
+
+/* ÁREA DE VISUALIZACIÓN DE LA MASCOTA (derecha) */
+.pet-view-area {
+  flex: 1; /* Ocupa todo el espacio restante */
+  display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+
+  /* Imagen de fondo */
+  background-image: url("../assets/habitacion.png");
+  background-size: cover; /* Cubre toda el área */
+  background-position: center; /* Centra la imagen */
+}
+
+/* Mensaje cuando no hay mascotas */
+.no-pet-message {
+  text-align: center;
+  color: white;
+  background-color: rgba(0, 0, 0, 0.6);
+  padding: 2rem;
+  border-radius: 12px;
+}
+
+.no-pet-message h1 {
+  margin-top: 0;
+  font-size: 2.5rem;
+}
+
+.no-pet-message p {
+  font-size: 1.2rem;
 }

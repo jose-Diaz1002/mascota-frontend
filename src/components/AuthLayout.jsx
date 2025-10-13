@@ -1,17 +1,12 @@
-import React from 'react';
-import './AuthLayout.css';
+import "./AuthLayout.css"
 
 function AuthLayout({ children }) {
   return (
     <div className="auth-layout">
-      <div className="auth-form-section">
-        {children}
-      </div>
-      <div className="auth-showcase-section">
-       
-      </div>
+      <div className="auth-form-section">{children}</div>
+      <div className="auth-showcase-section"></div>
     </div>
-  );
+  )
 }
 
-export default AuthLayout;
+export default AuthLayout
