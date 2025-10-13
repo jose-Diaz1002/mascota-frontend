@@ -26,12 +26,26 @@ const accessoryMap = {
 // FUNCIÓN: getPetImage
 // PROPÓSITO: Decide qué imagen mostrar según las estadísticas
 // LÓGICA:
+// - Si está hovering → mascota feliz (sin importar las estadísticas)
 // - Si hambre > 70 → mascota hambrienta
 // - Si felicidad > 80 → mascota feliz
 // - En cualquier otro caso → mascota normal
-const getPetImage = (hunger, happiness) => {
-  if (hunger > 70) return petHungryImg // Prioridad al hambre
-  if (happiness > 80) return petHappyImg
+const getPetImage = (hunger, happiness, isHovering) => {
+  console.log("[v0] getPetImage - hunger:", hunger, "happiness:", happiness, "isHovering:", isHovering)
+
+  if (isHovering) {
+    console.log("[v0] Mostrando imagen FELIZ por hover")
+    return petHappyImg // Prioridad al hover
+  }
+  if (hunger > 70) {
+    console.log("[v0] Mostrando imagen HAMBRIENTA")
+    return petHungryImg // Prioridad al hambre
+  }
+  if (happiness > 80) {
+    console.log("[v0] Mostrando imagen FELIZ por felicidad > 80")
+    return petHappyImg
+  }
+  console.log("[v0] Mostrando imagen NORMAL")
   return petNormalImg // Imagen por defecto
 }
 
@@ -73,13 +87,13 @@ const getPetAnimation = (hunger, happiness) => {
 }
 
 // COMPONENTE PRINCIPAL: PetView
-function PetView({ pet, onMouseEnter, onMouseLeave }) {
+function PetView({ pet, isHovering, onMouseEnter, onMouseLeave }) {
   // Si no hay mascota, no renderiza nada
   if (!pet) return null
 
   // Obtiene la animación y la imagen según las estadísticas actuales
   const petAnimation = getPetAnimation(pet.hunger, pet.happiness)
-  const petImageSrc = getPetImage(pet.hunger, pet.happiness)
+  const petImageSrc = getPetImage(pet.hunger, pet.happiness, isHovering)
 
   return (
     <div className="pet-view-container">
@@ -96,9 +110,8 @@ function PetView({ pet, onMouseEnter, onMouseLeave }) {
           src={petImageSrc || "/placeholder.svg"} // Usa placeholder si no hay imagen
           alt="Mascota"
           className="pet-base"
-          // filter hue-rotate: Cambia el color de la imagen según pet.color
-          // Esto permite "colorear" la mascota sin necesitar múltiples imágenes
-          style={{ filter: `hue-rotate(${pet.color || 0}deg)` }}
+          // Si no hay color guardado, no aplica ningún filtro (muestra el color original)
+          style={{ filter: pet.color || "none" }}
         />
 
         {/* ACCESORIOS: Se renderizan encima de la mascota */}

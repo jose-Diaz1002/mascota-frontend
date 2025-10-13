@@ -27,10 +27,70 @@
   font-weight: bold;
 }
 
+/* Controles de búsqueda y ordenamiento */
+.table-controls {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.sort-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-box label {
+  font-weight: bold;
+  color: #667eea;
+}
+
+.sort-select {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  background: white;
+  transition: border-color 0.3s ease;
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
 /* Contenedor de botones de acción */
 .admin-actions {
   display: flex;
   gap: 1rem; /* Espacio entre botones */
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 /* Estilos para botones del header */
@@ -64,6 +124,23 @@
   transform: translateY(-2px);
 }
 
+/* Botón de refrescar */
+.refresh-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #48dbfb;
+  color: white;
+}
+
+.refresh-button:hover {
+  background: #0abde3;
+  transform: translateY(-2px);
+}
+
 /* Sección de estadísticas */
 .admin-stats {
   display: grid;
@@ -93,6 +170,22 @@
   font-weight: bold;
   margin: 0;
   color: #ffd700; /* Color dorado para los números */
+}
+
+/* Estilos para inputs de edición */
+.stat-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 1rem;
+  text-align: center;
+  font-weight: bold;
+}
+
+.stat-input:focus {
+  outline: none;
+  border-color: #764ba2;
 }
 
 /* Contenedor de la tabla de mascotas */
@@ -188,6 +281,55 @@
   transform: scale(1.05);
 }
 
+/* Botones de editar, guardar y cancelar */
+.edit-button {
+  padding: 0.5rem 1rem;
+  background: #48dbfb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.edit-button:hover {
+  background: #0abde3;
+  transform: scale(1.05);
+}
+
+.save-button {
+  padding: 0.5rem 1rem;
+  background: #1dd1a1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.save-button:hover {
+  background: #10ac84;
+  transform: scale(1.05);
+}
+
+.cancel-button {
+  padding: 0.5rem 1rem;
+  background: #feca57;
+  color: #333;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background: #ff9ff3;
+  transform: scale(1.05);
+}
+
 /* Mensaje cuando no hay mascotas */
 .no-pets {
   text-align: center;
@@ -239,5 +381,31 @@
   .pets-table th,
   .pets-table td {
     padding: 0.5rem;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box,
+  .sort-box {
+    width: 100%;
+  }
+
+  .sort-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .edit-button,
+  .save-button,
+  .cancel-button,
+  .delete-button {
+    width: 100%;
   }
 }

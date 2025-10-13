@@ -1,7 +1,3 @@
-// ARCHIVO: PetDashboard.jsx
-// PROPÓSITO: Panel principal de la aplicación donde se gestionan las mascotas
-// Muestra la lista de mascotas, permite crear nuevas, y visualizar/interactuar con ellas
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,7 +10,7 @@ import "./PetDashboard.css"
 function PetDashboard() {
   // ESTADOS: Almacenan toda la información necesaria para el dashboard
   const [pets, setPets] = useState([]) // Array con todas las mascotas del usuario
-  const [selectedPet, setSelectedPet] = useState(null) // Mascota actualmente seleccionada
+  const [activePet, setActivePet] = useState(null) // Renombrado de selectedPet a activePet para claridad
   const [showCreateForm, setShowCreateForm] = useState(false) // Controla si se muestra el formulario de creación
   const [newPetName, setNewPetName] = useState("") // Nombre de la nueva mascota
   const [error, setError] = useState("") // Mensajes de error
@@ -24,7 +20,6 @@ function PetDashboard() {
   const navigate = useNavigate()
 
   // EFECTO 1: Se ejecuta UNA VEZ cuando el componente se monta (carga inicial)
-  // useEffect con array vacío [] se ejecuta solo al inicio
   useEffect(() => {
     fetchPets() // Obtiene las mascotas del backend
 
@@ -38,102 +33,101 @@ function PetDashboard() {
     if (storedRole) {
       setUserRole(storedRole)
     }
-  }, []) // Array vacío = solo se ejecuta una vez
+  }, [])
+
+  useEffect(() => {
+    if (!activePet) return
+
+    const syncInterval = setInterval(() => {
+      console.log("[v0] Sincronizando con backend...")
+      fetchPets()
+    }, 30000) // Cada 30 segundos
+
+    return () => clearInterval(syncInterval)
+  }, [activePet])
 
   // EFECTO 2: Controla la FELICIDAD de la mascota
-  // Se ejecuta cada vez que cambia selectedPet
   // La felicidad DISMINUYE automáticamente cada 1 segundo
   useEffect(() => {
-    if (!selectedPet) return // Si no hay mascota seleccionada, no hace nada
+    if (!activePet) return
 
-    // setInterval: Ejecuta una función cada X milisegundos
+    console.log("[v0] Iniciando intervalo de felicidad para pet ID:", activePet.id)
+
     const happinessInterval = setInterval(() => {
-      // setSelectedPet con función: Recibe el estado anterior y devuelve el nuevo
-      setSelectedPet((prev) => {
+      setActivePet((prev) => {
         if (!prev) return prev
-
-        // Math.max(0, valor) asegura que nunca sea menor que 0
-        const newHappiness = Math.max(0, prev.happiness - 1) // Disminuye 1 punto
-
-        // Actualiza en el backend
-        updatePetStats(prev.id, { happiness: newHappiness })
-
-        // Devuelve el nuevo estado con la felicidad actualizada
-        return { ...prev, happiness: newHappiness } // Spread operator (...) copia todas las propiedades
+        const newHappiness = Math.max(0, prev.happiness - 1)
+        console.log("[v0] Felicidad disminuyendo:", prev.happiness, "→", newHappiness)
+        return { ...prev, happiness: newHappiness }
       })
-    }, 1000) // 1000ms = 1 segundo (MÁS RÁPIDO que antes)
+    }, 60000) // Cambiado de 1000ms (1 seg) a 60000ms (60 seg) para sincronizar con backend
 
-    // CLEANUP: clearInterval detiene el intervalo cuando el componente se desmonta
-    // o cuando selectedPet cambia (para evitar múltiples intervalos)
-    return () => clearInterval(happinessInterval)
-  }, [selectedPet]) // Se ejecuta cada vez que selectedPet cambia
+    return () => {
+      console.log("[v0] Limpiando intervalo de felicidad")
+      clearInterval(happinessInterval)
+    }
+  }, [activePet]) // Cambiado de [activePet] a [activePet?.id] para evitar recrear el intervalo
 
   // EFECTO 3: Controla el HAMBRE de la mascota
   // El hambre AUMENTA automáticamente cada 3 segundos
   useEffect(() => {
-    if (!selectedPet) return
+    if (!activePet) return
+
+    console.log("[v0] Iniciando intervalo de hambre para pet ID:", activePet.id)
 
     const hungerInterval = setInterval(() => {
-      setSelectedPet((prev) => {
+      setActivePet((prev) => {
         if (!prev) return prev
-
-        // Math.min(100, valor) asegura que nunca sea mayor que 100
-        const newHunger = Math.min(100, prev.hunger + 2) // Aumenta 2 puntos
-
-        updatePetStats(prev.id, { hunger: newHunger })
+        const newHunger = Math.min(100, prev.hunger + 1) // Cambiado de +2 a +1 para sincronizar con backend
+        console.log("[v0] Hambre aumentando:", prev.hunger, "→", newHunger)
         return { ...prev, hunger: newHunger }
       })
-    }, 3000) // 3000ms = 3 segundos (MÁS RÁPIDO que antes)
+    }, 5000) // Cambiado de 3000ms (3 seg) a 5000ms (5 seg) para sincronizar con backend
 
-    return () => clearInterval(hungerInterval)
-  }, [selectedPet])
+    return () => {
+      console.log("[v0] Limpiando intervalo de hambre")
+      clearInterval(hungerInterval)
+    }
+  }, [activePet]) // Cambiado de [activePet] a [activePet?.id] para evitar recrear el intervalo
 
   // EFECTO 4: Controla el aumento de FELICIDAD mientras el ratón está sobre la mascota
   // La felicidad AUMENTA continuamente cada 500ms mientras isHovering es true
   useEffect(() => {
-    if (!selectedPet || !isHovering) return // Solo funciona si hay mascota Y el ratón está encima
+    if (!activePet || !isHovering) return
 
-    // Intervalo que se ejecuta cada 500ms mientras se acaricia
+    console.log("[v0] Iniciando intervalo de hover para pet ID:", activePet.id)
+
     const hoverInterval = setInterval(() => {
-      setSelectedPet((prev) => {
+      setActivePet((prev) => {
         if (!prev) return prev
-
-        // Aumenta la felicidad en 2 puntos (hasta máximo 100)
         const newHappiness = Math.min(100, prev.happiness + 2)
-
-        // Actualiza en el backend
-        updatePetStats(prev.id, { happiness: newHappiness })
-
+        console.log("[v0] Felicidad aumentando por hover:", prev.happiness, "→", newHappiness)
         return { ...prev, happiness: newHappiness }
       })
-    }, 500) // 500ms = medio segundo (aumenta rápido mientras acaricia)
+    }, 500)
 
-    // Limpia el intervalo cuando deja de acariciar o cambia de mascota
-    return () => clearInterval(hoverInterval)
-  }, [selectedPet, isHovering]) // Se ejecuta cuando cambia selectedPet O isHovering
+    return () => {
+      console.log("[v0] Limpiando intervalo de hover")
+      clearInterval(hoverInterval)
+    }
+  }, [activePet, isHovering]) // Cambiado de [activePet, isHovering] a [activePet?.id, isHovering]
 
   // FUNCIÓN: fetchPets
-  // PROPÓSITO: Obtiene todas las mascotas del usuario desde el backend
   const fetchPets = async () => {
     try {
-      const token = localStorage.getItem("token") // Obtiene el token de autenticación
-
-      // GET request al backend con el token en los headers
-      // El token es necesario para que el backend sepa qué usuario está haciendo la petición
+      const token = localStorage.getItem("token")
       const response = await axios.get("http://localhost:8080/api/pets", {
-        headers: { Authorization: `Bearer ${token}` }, // Bearer token es el estándar para JWT
+        headers: { Authorization: `Bearer ${token}` },
       })
 
-      setPets(response.data) // Guarda las mascotas en el estado
+      setPets(response.data)
 
-      // Si hay mascotas, selecciona automáticamente la primera
       if (response.data.length > 0) {
-        setSelectedPet(response.data[0])
+        setActivePet(response.data[0])
       }
     } catch (err) {
       console.error("Error al obtener mascotas:", err)
 
-      // Si el token es inválido o expiró (error 401), redirige al login
       if (err.response?.status === 401) {
         navigate("/login")
       }
@@ -141,28 +135,26 @@ function PetDashboard() {
   }
 
   // FUNCIÓN: updatePetStats
-  // PROPÓSITO: Actualiza las estadísticas de una mascota en el backend
-  // Se usa para sincronizar los cambios locales con la base de datos
   const updatePetStats = async (petId, stats) => {
     try {
       const token = localStorage.getItem("token")
-
-      // PUT request para actualizar la mascota
       await axios.put(`http://localhost:8080/api/pets/${petId}`, stats, {
         headers: { Authorization: `Bearer ${token}` },
       })
     } catch (err) {
-      console.error("Error al actualizar estadísticas:", err)
+      if (err.response?.status === 403) {
+        console.warn("No tienes permisos para actualizar esta mascota")
+      } else {
+        console.error("Error al actualizar estadísticas:", err)
+      }
     }
   }
 
   // FUNCIÓN: handleCreatePet
-  // PROPÓSITO: Crea una nueva mascota cuando el usuario envía el formulario
   const handleCreatePet = async (event) => {
-    event.preventDefault() // Previene recarga de página
+    event.preventDefault()
     setError("")
 
-    // Validación: El nombre no puede estar vacío
     if (!newPetName.trim()) {
       setError("El nombre de la mascota es obligatorio.")
       return
@@ -171,25 +163,22 @@ function PetDashboard() {
     try {
       const token = localStorage.getItem("token")
 
-      // POST request para crear una nueva mascota
       const response = await axios.post(
         "http://localhost:8080/api/pets",
         {
           name: newPetName,
-          hunger: 50, // Valores iniciales
+          hunger: 50,
           happiness: 50,
-          color: 0, // Color por defecto
+          color: 0,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         },
       )
 
-      // Actualiza el estado local con la nueva mascota
-      setPets([...pets, response.data]) // Spread operator añade la nueva mascota al array
-      setSelectedPet(response.data) // Selecciona automáticamente la nueva mascota
+      setPets([...pets, response.data])
+      setActivePet(response.data)
 
-      // Limpia el formulario
       setNewPetName("")
       setShowCreateForm(false)
     } catch (err) {
@@ -198,22 +187,16 @@ function PetDashboard() {
     }
   }
 
-  // FUNCIÓN: handleFeed
-  // PROPÓSITO: Alimenta a la mascota, reduciendo su hambre en 20 puntos
-  const handleFeed = async () => {
-    if (!selectedPet) return
+  const handleFeed = () => {
+    if (!activePet) return
 
-    const newHunger = Math.max(0, selectedPet.hunger - 20) // Reduce hambre
-    setSelectedPet({ ...selectedPet, hunger: newHunger }) // Actualiza estado local
-    await updatePetStats(selectedPet.id, { hunger: newHunger }) // Sincroniza con backend
+    const newHunger = Math.max(0, activePet.hunger - 30)
+    setActivePet({ ...activePet, hunger: newHunger })
   }
 
   // FUNCIÓN: handleMouseEnter
-  // PROPÓSITO: Se ejecuta cuando el ratón entra en la mascota (acariciar)
-  // Aumenta la felicidad en 5 puntos
   const handleMouseEnter = () => {
-    if (!selectedPet) return
-
+    if (!activePet) return
     setIsHovering(true)
   }
 
@@ -221,45 +204,41 @@ function PetDashboard() {
     setIsHovering(false)
   }
 
-  // FUNCIÓN: handleColorChange
-  // PROPÓSITO: Cambia el color de la mascota aplicando un filtro CSS
-  // PARÁMETRO: colorValue - String con el filtro CSS completo (ej: "grayscale(100%) sepia(100%) hue-rotate(160deg)")
-  const handleColorChange = async (colorValue) => {
-    if (!selectedPet) return
+  const handleColorChange = (colorValue) => {
+    if (!activePet) return
 
-    setSelectedPet({ ...selectedPet, color: colorValue })
-    await updatePetStats(selectedPet.id, { color: colorValue })
+    setActivePet({ ...activePet, color: colorValue })
   }
 
   // FUNCIÓN: handleDelete
-  // PROPÓSITO: Elimina una mascota después de confirmar con el usuario
   const handleDelete = async (petId) => {
-    // window.confirm muestra un diálogo de confirmación
     if (!window.confirm("¿Estás seguro de que quieres eliminar esta mascota?")) return
 
     try {
       const token = localStorage.getItem("token")
 
-      // DELETE request para eliminar la mascota
       await axios.delete(`http://localhost:8080/api/pets/${petId}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      // Actualiza el estado local removiendo la mascota eliminada
-      const updatedPets = pets.filter((p) => p.id !== petId) // filter crea un nuevo array sin la mascota
+      const updatedPets = pets.filter((p) => p.id !== petId)
       setPets(updatedPets)
 
-      // Si quedan mascotas, selecciona la primera; si no, null
-      setSelectedPet(updatedPets.length > 0 ? updatedPets[0] : null)
+      setActivePet(updatedPets.length > 0 ? updatedPets[0] : null)
     } catch (err) {
       console.error("Error al eliminar mascota:", err)
     }
   }
 
   // FUNCIÓN: handleLogout
-  // PROPÓSITO: Cierra la sesión del usuario
-  // Elimina todos los datos de localStorage y redirige al login
   const handleLogout = () => {
+    if (activePet) {
+      updatePetStats(activePet.id, {
+        hunger: activePet.hunger,
+        happiness: activePet.happiness,
+      })
+    }
+
     localStorage.removeItem("token")
     localStorage.removeItem("role")
     localStorage.removeItem("username")
@@ -270,12 +249,10 @@ function PetDashboard() {
     navigate("/admin")
   }
 
-  // RENDERIZADO: JSX que define la estructura visual del componente
+  // RENDERIZADO
   return (
     <div className="dashboard-container">
-      {/* PANEL IZQUIERDO: Control panel con opciones */}
       <div className="control-panel">
-        {/* Muestra el nombre del usuario si existe */}
         {username && (
           <div className="user-info">
             <h2>Hola, {username}</h2>
@@ -289,10 +266,8 @@ function PetDashboard() {
 
         <hr className="separator" />
 
-        {/* RENDERIZADO CONDICIONAL: Muestra PetCard si hay mascota seleccionada, o formulario de creación */}
-        {selectedPet ? (
-          // Si hay mascota seleccionada, muestra el PetCard con sus estadísticas y botones
-          <PetCard pet={selectedPet} onFeed={handleFeed} onDelete={handleDelete} onColorChange={handleColorChange} />
+        {activePet ? (
+          <PetCard pet={activePet} onFeed={handleFeed} onDelete={handleDelete} onColorChange={handleColorChange} />
         ) : (
           <div className="creation-hub">
             <h3>¡Crea tu mascota!</h3>
@@ -336,18 +311,15 @@ function PetDashboard() {
           </div>
         )}
 
-        {/* BOTÓN DE LOGOUT: Siempre visible en la parte inferior */}
         <button className="logout-button" onClick={handleLogout}>
           Cerrar Sesión
         </button>
       </div>
 
-      {/* ÁREA DERECHA: Visualización de la mascota */}
       <div className="pet-view-area">
-        {/* RENDERIZADO CONDICIONAL: Muestra mascota O mensaje */}
-        {selectedPet ? (
+        {activePet ? (
           <PetView
-            pet={selectedPet}
+            pet={activePet}
             isHovering={isHovering}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}

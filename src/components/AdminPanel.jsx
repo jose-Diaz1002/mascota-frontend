@@ -15,6 +15,9 @@ function AdminPanel() {
   const [loading, setLoading] = useState(true) // Estado de carga
   const [error, setError] = useState("") // Mensajes de error
   const [stats, setStats] = useState({ totalPets: 0, totalUsers: 0 }) // Estadísticas generales
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortBy, setSortBy] = useState("id")
+  const [editingPet, setEditingPet] = useState(null)
   const navigate = useNavigate()
 
   // EFECTO: Se ejecuta al montar el componente
@@ -108,6 +111,64 @@ function AdminPanel() {
     navigate("/login")
   }
 
+  const handleEditPet = (pet) => {
+    setEditingPet({ ...pet })
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingPet) return
+
+    try {
+      const token = localStorage.getItem("token")
+
+      await axios.put(
+        `http://localhost:8080/api/admin/pets/${editingPet.id}`,
+        {
+          hunger: editingPet.hunger,
+          happiness: editingPet.happiness,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+
+      // Actualiza la lista local
+      setAllPets(allPets.map((pet) => (pet.id === editingPet.id ? editingPet : pet)))
+      setEditingPet(null)
+      alert("Mascota actualizada correctamente")
+    } catch (err) {
+      console.error("Error al actualizar mascota:", err)
+      alert("No se pudo actualizar la mascota. Inténtalo de nuevo.")
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingPet(null)
+  }
+
+  const filteredAndSortedPets = allPets
+    .filter((pet) => {
+      const searchLower = searchTerm.toLowerCase()
+      return (
+        pet.name.toLowerCase().includes(searchLower) ||
+        pet.username?.toLowerCase().includes(searchLower) ||
+        pet.id.toString().includes(searchLower)
+      )
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name)
+        case "hunger":
+          return b.hunger - a.hunger
+        case "happiness":
+          return a.happiness - b.happiness
+        case "id":
+        default:
+          return a.id - b.id
+      }
+    })
+
   // RENDERIZADO CONDICIONAL: Muestra loading, error o el panel
   if (loading) {
     return (
@@ -132,6 +193,9 @@ function AdminPanel() {
       <div className="admin-header">
         <h1>Panel de Administración</h1>
         <div className="admin-actions">
+          <button className="refresh-button" onClick={fetchAllPets} title="Refrescar datos">
+            🔄 Refrescar
+          </button>
           <button className="back-button" onClick={handleBackToDashboard}>
             Volver al Dashboard
           </button>
@@ -153,45 +217,111 @@ function AdminPanel() {
         </div>
       </div>
 
-      {/* TABLA: Lista de todas las mascotas del sistema */}
       <div className="pets-table-container">
-        <h2>Todas las Mascotas del Sistema</h2>
-        {allPets.length === 0 ? (
-          <p className="no-pets">No hay mascotas en el sistema.</p>
+        <div className="table-controls">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Buscar por nombre, usuario o ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          <div className="sort-box">
+            <label>Ordenar por:</label>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="sort-select">
+              <option value="id">ID</option>
+              <option value="name">Nombre</option>
+              <option value="hunger">Hambre (mayor a menor)</option>
+              <option value="happiness">Felicidad (menor a mayor)</option>
+            </select>
+          </div>
+        </div>
+
+        <h2>
+          Todas las Mascotas del Sistema ({filteredAndSortedPets.length} de {allPets.length})
+        </h2>
+        {filteredAndSortedPets.length === 0 ? (
+          <p className="no-pets">
+            {searchTerm ? "No se encontraron mascotas con ese criterio de búsqueda." : "No hay mascotas en el sistema."}
+          </p>
         ) : (
           <table className="pets-table">
             <thead>
               <tr>
                 <th>ID</th>
                 <th>Nombre</th>
-                <th>Propietario (User ID)</th>
+                <th>Usuario</th>
                 <th>Hambre</th>
                 <th>Felicidad</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {allPets.map((pet) => (
+              {filteredAndSortedPets.map((pet) => (
                 <tr key={pet.id}>
                   <td>{pet.id}</td>
                   <td>{pet.name}</td>
-                  <td>{pet.userId}</td>
+                  <td>{pet.username || `Usuario #${pet.userId}`}</td>
                   <td>
-                    <div className="stat-bar">
-                      <div className="stat-fill hunger" style={{ width: `${pet.hunger}%` }}></div>
-                      <span className="stat-text">{pet.hunger}%</span>
-                    </div>
+                    {editingPet?.id === pet.id ? (
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editingPet.hunger}
+                        onChange={(e) => setEditingPet({ ...editingPet, hunger: Number.parseInt(e.target.value) || 0 })}
+                        className="stat-input"
+                      />
+                    ) : (
+                      <div className="stat-bar">
+                        <div className="stat-fill hunger" style={{ width: `${pet.hunger}%` }}></div>
+                        <span className="stat-text">{pet.hunger}%</span>
+                      </div>
+                    )}
                   </td>
                   <td>
-                    <div className="stat-bar">
-                      <div className="stat-fill happiness" style={{ width: `${pet.happiness}%` }}></div>
-                      <span className="stat-text">{pet.happiness}%</span>
-                    </div>
+                    {editingPet?.id === pet.id ? (
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editingPet.happiness}
+                        onChange={(e) =>
+                          setEditingPet({ ...editingPet, happiness: Number.parseInt(e.target.value) || 0 })
+                        }
+                        className="stat-input"
+                      />
+                    ) : (
+                      <div className="stat-bar">
+                        <div className="stat-fill happiness" style={{ width: `${pet.happiness}%` }}></div>
+                        <span className="stat-text">{pet.happiness}%</span>
+                      </div>
+                    )}
                   </td>
                   <td>
-                    <button className="delete-button" onClick={() => handleDeletePet(pet.id, pet.name)}>
-                      Eliminar
-                    </button>
+                    <div className="action-buttons">
+                      {editingPet?.id === pet.id ? (
+                        <>
+                          <button className="save-button" onClick={handleSaveEdit}>
+                            Guardar
+                          </button>
+                          <button className="cancel-button" onClick={handleCancelEdit}>
+                            Cancelar
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button className="edit-button" onClick={() => handleEditPet(pet)}>
+                            Editar
+                          </button>
+                          <button className="delete-button" onClick={() => handleDeletePet(pet.id, pet.name)}>
+                            Eliminar
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
