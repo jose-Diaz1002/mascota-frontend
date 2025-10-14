@@ -1,29 +1,26 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import axios from "axios"
+import axios from "../api/axios"
 import { useNavigate } from "react-router-dom"
 import PetCard from "./PetCard"
 import PetView from "./PetView"
 import "./PetDashboard.css"
 
 function PetDashboard() {
-  // ESTADOS: Almacenan toda la información necesaria para el dashboard
-  const [pets, setPets] = useState([]) // Array con todas las mascotas del usuario
-  const [activePet, setActivePet] = useState(null) // Renombrado de selectedPet a activePet para claridad
-  const [showCreateForm, setShowCreateForm] = useState(false) // Controla si se muestra el formulario de creación
-  const [newPetName, setNewPetName] = useState("") // Nombre de la nueva mascota
-  const [error, setError] = useState("") // Mensajes de error
-  const [username, setUsername] = useState("") // Nombre del usuario logueado
+  const [pets, setPets] = useState([])
+  const [activePet, setActivePet] = useState(null)
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [newPetName, setNewPetName] = useState("")
+  const [error, setError] = useState("")
+  const [username, setUsername] = useState("")
   const [userRole, setUserRole] = useState("")
-  const [isHovering, setIsHovering] = useState(false) // Nuevo estado para controlar cuando el ratón está sobre la mascota
+  const [isHovering, setIsHovering] = useState(false)
   const navigate = useNavigate()
 
-  // EFECTO 1: Se ejecuta UNA VEZ cuando el componente se monta (carga inicial)
   useEffect(() => {
-    fetchPets() // Obtiene las mascotas del backend
+    fetchPets()
 
-    // Recupera el nombre de usuario de localStorage
     const storedUsername = localStorage.getItem("username")
     if (storedUsername) {
       setUsername(storedUsername)
@@ -41,13 +38,11 @@ function PetDashboard() {
     const syncInterval = setInterval(() => {
       console.log("[v0] Sincronizando con backend...")
       fetchPets()
-    }, 30000) // Cada 30 segundos
+    }, 30000)
 
     return () => clearInterval(syncInterval)
   }, [activePet])
 
-  // EFECTO 2: Controla la FELICIDAD de la mascota
-  // La felicidad DISMINUYE automáticamente cada 1 segundo
   useEffect(() => {
     if (!activePet) return
 
@@ -60,16 +55,14 @@ function PetDashboard() {
         console.log("[v0] Felicidad disminuyendo:", prev.happiness, "→", newHappiness)
         return { ...prev, happiness: newHappiness }
       })
-    }, 60000) // Cambiado de 1000ms (1 seg) a 60000ms (60 seg) para sincronizar con backend
+    }, 60000)
 
     return () => {
       console.log("[v0] Limpiando intervalo de felicidad")
       clearInterval(happinessInterval)
     }
-  }, [activePet]) // Cambiado de [activePet] a [activePet?.id] para evitar recrear el intervalo
+  }, [activePet])
 
-  // EFECTO 3: Controla el HAMBRE de la mascota
-  // El hambre AUMENTA automáticamente cada 3 segundos
   useEffect(() => {
     if (!activePet) return
 
@@ -78,20 +71,18 @@ function PetDashboard() {
     const hungerInterval = setInterval(() => {
       setActivePet((prev) => {
         if (!prev) return prev
-        const newHunger = Math.min(100, prev.hunger + 1) // Cambiado de +2 a +1 para sincronizar con backend
+        const newHunger = Math.min(100, prev.hunger + 1)
         console.log("[v0] Hambre aumentando:", prev.hunger, "→", newHunger)
         return { ...prev, hunger: newHunger }
       })
-    }, 5000) // Cambiado de 3000ms (3 seg) a 5000ms (5 seg) para sincronizar con backend
+    }, 5000)
 
     return () => {
       console.log("[v0] Limpiando intervalo de hambre")
       clearInterval(hungerInterval)
     }
-  }, [activePet]) // Cambiado de [activePet] a [activePet?.id] para evitar recrear el intervalo
+  }, [activePet])
 
-  // EFECTO 4: Controla el aumento de FELICIDAD mientras el ratón está sobre la mascota
-  // La felicidad AUMENTA continuamente cada 500ms mientras isHovering es true
   useEffect(() => {
     if (!activePet || !isHovering) return
 
@@ -110,15 +101,11 @@ function PetDashboard() {
       console.log("[v0] Limpiando intervalo de hover")
       clearInterval(hoverInterval)
     }
-  }, [activePet, isHovering]) // Cambiado de [activePet, isHovering] a [activePet?.id, isHovering]
+  }, [activePet, isHovering])
 
-  // FUNCIÓN: fetchPets
   const fetchPets = async () => {
     try {
-      const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:8080/api/pets", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const response = await axios.get("/pets")
 
       setPets(response.data)
 
@@ -134,13 +121,9 @@ function PetDashboard() {
     }
   }
 
-  // FUNCIÓN: updatePetStats
   const updatePetStats = async (petId, stats) => {
     try {
-      const token = localStorage.getItem("token")
-      await axios.put(`http://localhost:8080/api/pets/${petId}`, stats, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await axios.put(`/pets/${petId}`, stats)
     } catch (err) {
       if (err.response?.status === 403) {
         console.warn("No tienes permisos para actualizar esta mascota")
@@ -150,7 +133,6 @@ function PetDashboard() {
     }
   }
 
-  // FUNCIÓN: handleCreatePet
   const handleCreatePet = async (event) => {
     event.preventDefault()
     setError("")
@@ -161,20 +143,12 @@ function PetDashboard() {
     }
 
     try {
-      const token = localStorage.getItem("token")
-
-      const response = await axios.post(
-        "http://localhost:8080/api/pets",
-        {
-          name: newPetName,
-          hunger: 50,
-          happiness: 50,
-          color: 0,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      )
+      const response = await axios.post("/pets", {
+        name: newPetName,
+        hunger: 50,
+        happiness: 50,
+        color: 0,
+      })
 
       setPets([...pets, response.data])
       setActivePet(response.data)
@@ -194,7 +168,6 @@ function PetDashboard() {
     setActivePet({ ...activePet, hunger: newHunger })
   }
 
-  // FUNCIÓN: handleMouseEnter
   const handleMouseEnter = () => {
     if (!activePet) return
     setIsHovering(true)
@@ -210,16 +183,11 @@ function PetDashboard() {
     setActivePet({ ...activePet, color: colorValue })
   }
 
-  // FUNCIÓN: handleDelete
   const handleDelete = async (petId) => {
     if (!window.confirm("¿Estás seguro de que quieres eliminar esta mascota?")) return
 
     try {
-      const token = localStorage.getItem("token")
-
-      await axios.delete(`http://localhost:8080/api/pets/${petId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await axios.delete(`/pets/${petId}`)
 
       const updatedPets = pets.filter((p) => p.id !== petId)
       setPets(updatedPets)
@@ -230,7 +198,6 @@ function PetDashboard() {
     }
   }
 
-  // FUNCIÓN: handleLogout
   const handleLogout = () => {
     if (activePet) {
       updatePetStats(activePet.id, {
@@ -249,7 +216,6 @@ function PetDashboard() {
     navigate("/admin")
   }
 
-  // RENDERIZADO
   return (
     <div className="dashboard-container">
       <div className="control-panel">

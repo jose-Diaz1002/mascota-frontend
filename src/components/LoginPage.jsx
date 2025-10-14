@@ -5,35 +5,23 @@
 "use client"
 
 import { useState } from "react"
-import axios from "axios" // Librería para hacer peticiones HTTP al backend
-import { useNavigate, Link } from "react-router-dom" // useNavigate para redirigir, Link para enlaces
+import axios from "../api/axios"
+import { useNavigate, Link } from "react-router-dom"
 import "./LoginPage.css"
-import AuthLayout from "./AuthLayout" // Layout con diseño dividido (formulario + imagen)
+import AuthLayout from "./AuthLayout"
 
 function LoginPage() {
-  // HOOK: useNavigate - Permite redirigir a otras páginas programáticamente
   const navigate = useNavigate()
+  const [username, setUsername] = useState("")
+  const [password, setPassword] = useState("")
+  const [error, setError] = useState("")
 
-  // ESTADOS: Almacenan los valores de los inputs y mensajes de error
-  // useState es un hook de React que permite guardar y actualizar valores
-  const [username, setUsername] = useState("") // Guarda el nombre de usuario
-  const [password, setPassword] = useState("") // Guarda la contraseña
-  const [error, setError] = useState("") // Guarda mensajes de error para mostrar al usuario
-
-  // FUNCIÓN: handleLogin
-  // PROPÓSITO: Se ejecuta cuando el usuario envía el formulario
-  // 1. Previene el comportamiento por defecto del formulario (recargar página)
-  // 2. Envía credenciales al backend
-  // 3. Si es exitoso: guarda token y redirige a /dashboard
-  // 4. Si falla: muestra mensaje de error
   const handleLogin = async (event) => {
-    event.preventDefault() // Evita que el formulario recargue la página
-    setError("") // Limpia errores anteriores
+    event.preventDefault()
+    setError("")
 
     try {
-      // PETICIÓN HTTP: POST al endpoint de login del backend
-      // Envía username y password en el cuerpo de la petición
-      const response = await axios.post("http://localhost:8080/api/auth/login", {
+      const response = await axios.post("/auth/login", {
         username: username,
         password: password,
       })

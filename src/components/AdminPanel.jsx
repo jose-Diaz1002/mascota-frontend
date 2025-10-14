@@ -5,28 +5,23 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import axios from "axios"
+import axios from "../api/axios"
 import { useNavigate } from "react-router-dom"
 import "./AdminPanel.css"
 
 function AdminPanel() {
-  // ESTADOS: Almacenan la información del panel de administración
-  const [allPets, setAllPets] = useState([]) // Todas las mascotas del sistema
-  const [loading, setLoading] = useState(true) // Estado de carga
-  const [error, setError] = useState("") // Mensajes de error
-  const [stats, setStats] = useState({ totalPets: 0, totalUsers: 0 }) // Estadísticas generales
+  const [allPets, setAllPets] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [stats, setStats] = useState({ totalPets: 0, totalUsers: 0 })
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("id")
   const [editingPet, setEditingPet] = useState(null)
   const navigate = useNavigate()
 
-  // EFECTO: Se ejecuta al montar el componente
-  // Verifica que el usuario sea admin y carga todas las mascotas
   useEffect(() => {
-    // Verificar que el usuario tenga rol de administrador
     const role = localStorage.getItem("role")
     if (role !== "ROLE_ADMIN") {
-      // Si no es admin, redirige al dashboard
       navigate("/dashboard")
       return
     }
@@ -34,21 +29,12 @@ function AdminPanel() {
     fetchAllPets()
   }, [navigate])
 
-  // FUNCIÓN: fetchAllPets
-  // PROPÓSITO: Obtiene TODAS las mascotas del sistema (solo admins pueden hacer esto)
   const fetchAllPets = async () => {
     try {
-      const token = localStorage.getItem("token")
-
-      // GET request al endpoint de admin que devuelve todas las mascotas
-      // Este endpoint solo es accesible para usuarios con ROLE_ADMIN
-      const response = await axios.get("http://localhost:8080/api/admin/pets", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const response = await axios.get("/admin/pets")
 
       setAllPets(response.data)
 
-      // Calcular estadísticas
       const uniqueUsers = new Set(response.data.map((pet) => pet.userId)).size
       setStats({
         totalPets: response.data.length,
@@ -61,30 +47,20 @@ function AdminPanel() {
       setError("No se pudieron cargar las mascotas. Verifica que tengas permisos de administrador.")
       setLoading(false)
 
-      // Si hay error de autorización, redirige al dashboard
       if (err.response?.status === 403 || err.response?.status === 401) {
         navigate("/dashboard")
       }
     }
   }
 
-  // FUNCIÓN: handleDeletePet
-  // PROPÓSITO: Permite al admin eliminar cualquier mascota del sistema
   const handleDeletePet = async (petId, petName) => {
     if (!window.confirm(`¿Estás seguro de que quieres eliminar la mascota "${petName}"?`)) return
 
     try {
-      const token = localStorage.getItem("token")
+      await axios.delete(`/admin/pets/${petId}`)
 
-      // DELETE request usando el endpoint de admin
-      await axios.delete(`http://localhost:8080/api/admin/pets/${petId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-
-      // Actualiza la lista local removiendo la mascota eliminada
       setAllPets(allPets.filter((pet) => pet.id !== petId))
 
-      // Actualiza las estadísticas
       const uniqueUsers = new Set(allPets.filter((pet) => pet.id !== petId).map((pet) => pet.userId)).size
       setStats({
         totalPets: allPets.length - 1,
@@ -96,14 +72,10 @@ function AdminPanel() {
     }
   }
 
-  // FUNCIÓN: handleBackToDashboard
-  // PROPÓSITO: Regresa al dashboard normal
   const handleBackToDashboard = () => {
     navigate("/dashboard")
   }
 
-  // FUNCIÓN: handleLogout
-  // PROPÓSITO: Cierra la sesión del administrador
   const handleLogout = () => {
     localStorage.removeItem("token")
     localStorage.removeItem("role")
@@ -119,20 +91,11 @@ function AdminPanel() {
     if (!editingPet) return
 
     try {
-      const token = localStorage.getItem("token")
+      await axios.put(`/admin/pets/${editingPet.id}`, {
+        hunger: editingPet.hunger,
+        happiness: editingPet.happiness,
+      })
 
-      await axios.put(
-        `http://localhost:8080/api/admin/pets/${editingPet.id}`,
-        {
-          hunger: editingPet.hunger,
-          happiness: editingPet.happiness,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      )
-
-      // Actualiza la lista local
       setAllPets(allPets.map((pet) => (pet.id === editingPet.id ? editingPet : pet)))
       setEditingPet(null)
       alert("Mascota actualizada correctamente")
@@ -169,7 +132,6 @@ function AdminPanel() {
       }
     })
 
-  // RENDERIZADO CONDICIONAL: Muestra loading, error o el panel
   if (loading) {
     return (
       <div className="admin-panel">
@@ -189,7 +151,6 @@ function AdminPanel() {
 
   return (
     <div className="admin-panel">
-      {/* HEADER: Título y botones de navegación */}
       <div className="admin-header">
         <h1>Panel de Administración</h1>
         <div className="admin-actions">
@@ -205,7 +166,6 @@ function AdminPanel() {
         </div>
       </div>
 
-      {/* ESTADÍSTICAS: Muestra información general del sistema */}
       <div className="admin-stats">
         <div className="stat-card">
           <h3>Total de Mascotas</h3>
