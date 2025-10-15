@@ -26,27 +26,22 @@ const accessoryMap = {
 // FUNCIÓN: getPetImage
 // PROPÓSITO: Decide qué imagen mostrar según las estadísticas
 // LÓGICA:
-// - Si está hovering → mascota feliz (sin importar las estadísticas)
+// - Si está hovering → mascota feliz
 // - Si hambre > 70 → mascota hambrienta
-// - Si felicidad > 80 → mascota feliz
 // - En cualquier otro caso → mascota normal
 const getPetImage = (hunger, happiness, isHovering) => {
   console.log("[v0] getPetImage - hunger:", hunger, "happiness:", happiness, "isHovering:", isHovering)
 
   if (isHovering) {
     console.log("[v0] Mostrando imagen FELIZ por hover")
-    return petHappyImg // Prioridad al hover
+    return petHappyImg
   }
   if (hunger > 70) {
     console.log("[v0] Mostrando imagen HAMBRIENTA")
-    return petHungryImg // Prioridad al hambre
-  }
-  if (happiness > 80) {
-    console.log("[v0] Mostrando imagen FELIZ por felicidad > 80")
-    return petHappyImg
+    return petHungryImg
   }
   console.log("[v0] Mostrando imagen NORMAL")
-  return petNormalImg // Imagen por defecto
+  return petNormalImg
 }
 
 // FUNCIÓN: getPetAnimation
@@ -56,31 +51,19 @@ const getPetAnimation = (hunger, happiness) => {
   // ANIMACIÓN HAMBRIENTO: Salta arriba y abajo (pidiendo comida)
   if (hunger > 70) {
     return {
-      y: [0, -10, 0], // Movimiento vertical: posición inicial → arriba → inicial
+      y: [0, -10, 0],
       transition: {
-        duration: 2, // Duración de un ciclo completo (2 segundos)
-        repeat: Number.POSITIVE_INFINITY, // Se repite infinitamente
-      },
-    }
-  }
-
-  // ANIMACIÓN FELIZ: Gira de lado a lado (celebrando)
-  if (happiness > 80) {
-    return {
-      rotate: [0, -5, 5, -5, 0], // Rotación: centro → izq → der → izq → centro
-      transition: {
-        duration: 0.5, // Animación rápida (0.5 segundos)
+        duration: 2,
         repeat: Number.POSITIVE_INFINITY,
-        repeatDelay: 1, // Pausa de 1 segundo entre repeticiones
       },
     }
   }
 
   // ANIMACIÓN NORMAL: Flotación suave (respiración)
   return {
-    y: [0, -5, 0], // Movimiento sutil arriba y abajo
+    y: [0, -5, 0],
     transition: {
-      duration: 3, // Animación lenta (3 segundos)
+      duration: 3,
       repeat: Number.POSITIVE_INFINITY,
     },
   }

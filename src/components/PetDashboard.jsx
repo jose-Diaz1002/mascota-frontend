@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import axios from "../api/axios"
 import { useNavigate } from "react-router-dom"
 import PetCard from "./PetCard"
@@ -18,6 +18,11 @@ function PetDashboard() {
   const [isHovering, setIsHovering] = useState(false)
   const navigate = useNavigate()
 
+  const happinessIntervalRef = useRef(null)
+  const hungerIntervalRef = useRef(null)
+  const hoverIntervalRef = useRef(null)
+  const currentPetIdRef = useRef(null)
+
   useEffect(() => {
     fetchPets()
 
@@ -27,6 +32,7 @@ function PetDashboard() {
     }
 
     const storedRole = localStorage.getItem("role")
+    console.log("[v0] Rol cargado desde localStorage:", storedRole)
     if (storedRole) {
       setUserRole(storedRole)
     }
@@ -44,51 +50,74 @@ function PetDashboard() {
   }, [activePet])
 
   useEffect(() => {
-    if (!activePet) return
+    if (!activePet) {
+      // Limpiar todos los intervalos si no hay mascota activa
+      if (happinessIntervalRef.current) {
+        clearInterval(happinessIntervalRef.current)
+        happinessIntervalRef.current = null
+      }
+      if (hungerIntervalRef.current) {
+        clearInterval(hungerIntervalRef.current)
+        hungerIntervalRef.current = null
+      }
+      if (hoverIntervalRef.current) {
+        clearInterval(hoverIntervalRef.current)
+        hoverIntervalRef.current = null
+      }
+      currentPetIdRef.current = null
+      return
+    }
 
-    console.log("[v0] Iniciando intervalo de felicidad para pet ID:", activePet.id)
+    // Solo reiniciar intervalos si cambió el ID de la mascota
+    if (currentPetIdRef.current !== activePet.id) {
+      console.log("[v0] Mascota cambió, reiniciando intervalos para pet ID:", activePet.id)
+      currentPetIdRef.current = activePet.id
 
-    const happinessInterval = setInterval(() => {
-      setActivePet((prev) => {
-        if (!prev) return prev
-        const newHappiness = Math.max(0, prev.happiness - 1)
-        console.log("[v0] Felicidad disminuyendo:", prev.happiness, "→", newHappiness)
-        return { ...prev, happiness: newHappiness }
-      })
-    }, 60000)
+      // Limpiar intervalos anteriores
+      if (happinessIntervalRef.current) clearInterval(happinessIntervalRef.current)
+      if (hungerIntervalRef.current) clearInterval(hungerIntervalRef.current)
+
+      // Intervalo de felicidad (disminuye cada 10 segundos)
+      happinessIntervalRef.current = setInterval(() => {
+        setActivePet((prev) => {
+          if (!prev) return prev
+          const newHappiness = Math.max(0, prev.happiness - 1)
+          console.log("[v0] Felicidad disminuyendo:", prev.happiness, "→", newHappiness)
+          return { ...prev, happiness: newHappiness }
+        })
+      }, 10000)
+
+      // Intervalo de hambre (aumenta cada 5 segundos)
+      hungerIntervalRef.current = setInterval(() => {
+        setActivePet((prev) => {
+          if (!prev) return prev
+          const newHunger = Math.min(100, prev.hunger + 1)
+          console.log("[v0] Hambre aumentando:", prev.hunger, "→", newHunger)
+          return { ...prev, hunger: newHunger }
+        })
+      }, 5000)
+    }
 
     return () => {
-      console.log("[v0] Limpiando intervalo de felicidad")
-      clearInterval(happinessInterval)
+      // Solo limpiar al desmontar el componente
+      if (happinessIntervalRef.current) clearInterval(happinessIntervalRef.current)
+      if (hungerIntervalRef.current) clearInterval(hungerIntervalRef.current)
     }
   }, [activePet])
 
   useEffect(() => {
-    if (!activePet) return
-
-    console.log("[v0] Iniciando intervalo de hambre para pet ID:", activePet.id)
-
-    const hungerInterval = setInterval(() => {
-      setActivePet((prev) => {
-        if (!prev) return prev
-        const newHunger = Math.min(100, prev.hunger + 1)
-        console.log("[v0] Hambre aumentando:", prev.hunger, "→", newHunger)
-        return { ...prev, hunger: newHunger }
-      })
-    }, 5000)
-
-    return () => {
-      console.log("[v0] Limpiando intervalo de hambre")
-      clearInterval(hungerInterval)
+    if (!activePet || !isHovering) {
+      if (hoverIntervalRef.current) {
+        console.log("[v0] Limpiando intervalo de hover")
+        clearInterval(hoverIntervalRef.current)
+        hoverIntervalRef.current = null
+      }
+      return
     }
-  }, [activePet])
-
-  useEffect(() => {
-    if (!activePet || !isHovering) return
 
     console.log("[v0] Iniciando intervalo de hover para pet ID:", activePet.id)
 
-    const hoverInterval = setInterval(() => {
+    hoverIntervalRef.current = setInterval(() => {
       setActivePet((prev) => {
         if (!prev) return prev
         const newHappiness = Math.min(100, prev.happiness + 2)
@@ -98,8 +127,11 @@ function PetDashboard() {
     }, 500)
 
     return () => {
-      console.log("[v0] Limpiando intervalo de hover")
-      clearInterval(hoverInterval)
+      if (hoverIntervalRef.current) {
+        console.log("[v0] Limpiando intervalo de hover")
+        clearInterval(hoverIntervalRef.current)
+        hoverIntervalRef.current = null
+      }
     }
   }, [activePet, isHovering])
 
@@ -222,6 +254,7 @@ function PetDashboard() {
         {username && (
           <div className="user-info">
             <h2>Hola, {username}</h2>
+            {console.log("[v0] userRole actual:", userRole, "¿Es admin?", userRole === "ROLE_ADMIN")}
             {userRole === "ROLE_ADMIN" && (
               <button className="admin-button" onClick={handleGoToAdmin}>
                 Panel Admin

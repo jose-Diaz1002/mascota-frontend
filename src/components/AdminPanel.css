@@ -30,7 +30,7 @@
 /* Controles de búsqueda y ordenamiento */
 .table-controls {
   display: flex;
-  gap: 1rem;
+  gap: 4rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
   align-items: center;
@@ -39,6 +39,7 @@
 .search-box {
   flex: 1;
   min-width: 250px;
+  max-width: 500px;
 }
 
 .search-input {
@@ -59,6 +60,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 200px;
 }
 
 .sort-box label {

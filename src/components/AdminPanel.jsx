@@ -33,6 +33,8 @@ function AdminPanel() {
     try {
       const response = await axios.get("/admin/pets")
 
+      console.log("[v0] Datos de mascotas recibidos:", response.data[0])
+
       setAllPets(response.data)
 
       const uniqueUsers = new Set(response.data.map((pet) => pet.userId)).size
@@ -223,7 +225,9 @@ function AdminPanel() {
                 <tr key={pet.id}>
                   <td>{pet.id}</td>
                   <td>{pet.name}</td>
-                  <td>{pet.username || `Usuario #${pet.userId}`}</td>
+                  <td>
+                    {pet.username || pet.ownerUsername || pet.user?.username || `Usuario #${pet.userId || pet.id}`}
+                  </td>
                   <td>
                     {editingPet?.id === pet.id ? (
                       <input

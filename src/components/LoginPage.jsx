@@ -27,21 +27,23 @@ function LoginPage() {
       })
 
       // DECODIFICACIÓN DEL TOKEN JWT
-      // El backend devuelve un token JWT que contiene información del usuario
-      // jwt-decode es una librería que extrae esa información sin validar la firma
       const { jwtDecode } = await import("jwt-decode")
       const decodedToken = jwtDecode(response.data.token)
 
-      // ALMACENAMIENTO LOCAL: Guarda el token y el rol en localStorage
-      // localStorage persiste los datos incluso si cierras el navegador
-      localStorage.setItem("token", response.data.token) // Token para autenticar futuras peticiones
-      localStorage.setItem("role", decodedToken.role[0].authority) // Rol del usuario (USER, ADMIN, etc.)
-      localStorage.setItem("username", username) // Guardamos el nombre de usuario
+      console.log("[v0] Token decodificado:", decodedToken)
+      const userRole = decodedToken.role[0] // Extraer el primer rol del array
+      console.log("[v0] Rol extraído:", userRole)
 
-      // REDIRECCIÓN: Lleva al usuario al dashboard después del login exitoso
+      // ALMACENAMIENTO LOCAL
+      localStorage.setItem("token", response.data.token)
+      localStorage.setItem("role", userRole) // Guardar el rol correctamente
+      localStorage.setItem("username", username)
+
+      console.log("[v0] Datos guardados en localStorage - role:", localStorage.getItem("role"))
+
+      // REDIRECCIÓN
       navigate("/dashboard")
     } catch (err) {
-      // MANEJO DE ERRORES: Si el login falla, muestra un mensaje al usuario
       console.error("Error en el login:", err)
       setError("Usuario o contraseña incorrectos.")
     }
