@@ -16,13 +16,52 @@ const axiosInstance = axios.create({
 // Interceptor para agregar el token JWT a todas las peticiones
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token")
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    console.log("[v0] Axios interceptor - URL:", config.url)
+
+    const isAuthEndpoint =
+      config.url?.startsWith("/auth/") || config.url?.includes("/auth/login") || config.url?.includes("/auth/register")
+
+    console.log("[v0] Axios interceptor - isAuthEndpoint:", isAuthEndpoint)
+
+    if (!isAuthEndpoint) {
+      const token = localStorage.getItem("token")
+      if (token) {
+        console.log("[v0] Axios interceptor - Agregando token")
+        config.headers.Authorization = `Bearer ${token}`
+      } else {
+        console.log("[v0] Axios interceptor - No hay token en localStorage")
+      }
+    } else {
+      console.log("[v0] Axios interceptor - Endpoint de auth, NO agregando token")
     }
+
     return config
   },
   (error) => {
+    return Promise.reject(error)
+  },
+)
+
+// Interceptor para manejar respuestas y errores
+axiosInstance.interceptors.response.use(
+  (response) => {
+    // Si la respuesta es exitosa, simplemente la devolvemos
+    return response
+  },
+  (error) => {
+    // Si hay un error 401 (Unauthorized), significa que el token expiró o es inválido
+    if (error.response && error.response.status === 401) {
+      console.log("[v0] Token expirado o inválido (401), limpiando localStorage y redirigiendo a login")
+
+      // Limpiar el localStorage
+      localStorage.removeItem("token")
+      localStorage.removeItem("role")
+      localStorage.removeItem("username")
+
+      // Redirigir al login
+      window.location.href = "/login"
+    }
+
     return Promise.reject(error)
   },
 )

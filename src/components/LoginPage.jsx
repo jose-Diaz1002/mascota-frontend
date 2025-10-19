@@ -6,7 +6,7 @@
 
 import { useState } from "react"
 import axios from "../api/axios"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import "./LoginPage.css"
 import AuthLayout from "./AuthLayout"
 
@@ -20,11 +20,16 @@ function LoginPage() {
     event.preventDefault()
     setError("")
 
+    console.log("[v0] LoginPage - Iniciando login para:", username)
+
     try {
+      console.log("[v0] LoginPage - Enviando petición de login...")
       const response = await axios.post("/auth/login", {
         username: username,
         password: password,
       })
+
+      console.log("[v0] LoginPage - Login exitoso, respuesta:", response.data)
 
       // DECODIFICACIÓN DEL TOKEN JWT
       const { jwtDecode } = await import("jwt-decode")
@@ -42,11 +47,19 @@ function LoginPage() {
       console.log("[v0] Datos guardados en localStorage - role:", localStorage.getItem("role"))
 
       // REDIRECCIÓN
+      console.log("[v0] LoginPage - Navegando a /dashboard...")
       navigate("/dashboard")
+      console.log("[v0] LoginPage - navigate() ejecutado")
     } catch (err) {
-      console.error("Error en el login:", err)
+      console.error("[v0] LoginPage - Error en el login:", err)
       setError("Usuario o contraseña incorrectos.")
     }
+  }
+
+  const goToRegister = () => {
+    console.log("[v0] LoginPage - Navegando a /register...")
+    navigate("/register")
+    console.log("[v0] LoginPage - navigate('/register') ejecutado")
   }
 
   return (
@@ -65,10 +78,10 @@ function LoginPage() {
           <input
             type="text"
             id="username"
-            placeholder="Ingresa tu nombre de usuario" // Agregado placeholder para mayor claridad
-            value={username} // El valor del input está controlado por el estado
-            onChange={(e) => setUsername(e.target.value)} // Actualiza el estado cuando el usuario escribe
-            required // HTML5 validation - campo obligatorio
+            placeholder="Ingresa tu nombre de usuario"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            required
           />
         </div>
 
@@ -76,9 +89,9 @@ function LoginPage() {
         <div className="form-group">
           <label htmlFor="password">Contraseña</label>
           <input
-            type="password" // type="password" oculta el texto
+            type="password"
             id="password"
-            placeholder="Ingresa tu contraseña" // Agregado placeholder para mayor claridad
+            placeholder="Ingresa tu contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -90,10 +103,28 @@ function LoginPage() {
           Ingresar
         </button>
 
-        {/* ENLACE: Lleva a la página de registro */}
-        <p style={{ textAlign: "center", marginTop: "1rem" }}>
-          ¿No tienes una cuenta? <Link to="/register">Regístrate aquí</Link>
-        </p>
+        <div style={{ textAlign: "center", marginTop: "1rem" }}>
+          <p style={{ marginBottom: "0.5rem" }}>¿No tienes una cuenta?</p>
+          <button
+            type="button"
+            onClick={goToRegister}
+            style={{
+              padding: "10px 20px",
+              backgroundColor: "#28a745",
+              color: "white",
+              border: "none",
+              borderRadius: "4px",
+              fontSize: "16px",
+              fontWeight: "bold",
+              cursor: "pointer",
+              transition: "background-color 0.3s ease",
+            }}
+            onMouseOver={(e) => (e.target.style.backgroundColor = "#218838")}
+            onMouseOut={(e) => (e.target.style.backgroundColor = "#28a745")}
+          >
+            Ir a Registro
+          </button>
+        </div>
       </form>
     </AuthLayout>
   )

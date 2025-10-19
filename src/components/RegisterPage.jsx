@@ -4,7 +4,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import axios from "../api/axios"
 import { useNavigate, Link } from "react-router-dom"
 import "./LoginPage.css"
@@ -16,9 +16,17 @@ function RegisterPage() {
   const [error, setError] = useState("")
   const navigate = useNavigate()
 
+  useEffect(() => {
+    console.log("[v0] RegisterPage - Componente montado!")
+    console.log("[v0] RegisterPage - URL actual:", window.location.href)
+    console.log("[v0] RegisterPage - pathname:", window.location.pathname)
+  }, [])
+
   const handleRegister = async (event) => {
     event.preventDefault()
     setError("")
+
+    console.log("[v0] RegisterPage - Iniciando registro para:", username)
 
     if (password.length < 6) {
       setError("La contraseña debe tener al menos 6 caracteres.")
@@ -26,19 +34,24 @@ function RegisterPage() {
     }
 
     try {
+      console.log("[v0] RegisterPage - Enviando petición de registro...")
       const response = await axios.post("/auth/register", {
         username: username,
         password: password,
       })
+
+      console.log("[v0] RegisterPage - Registro exitoso, respuesta:", response.data)
 
       const token = response.data.token
       localStorage.setItem("token", token)
       localStorage.setItem("role", "ROLE_USER")
       localStorage.setItem("username", username)
 
+      console.log("[v0] RegisterPage - Token guardado, navegando a /dashboard...")
       navigate("/dashboard")
+      console.log("[v0] RegisterPage - navigate() ejecutado")
     } catch (err) {
-      console.error("Error en el registro:", err)
+      console.error("[v0] RegisterPage - Error en el registro:", err)
       if (err.response && err.response.status === 400) {
         setError("El nombre de usuario ya existe. Por favor, elige otro.")
       } else {

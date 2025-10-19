@@ -1,3 +1,5 @@
+"use client"
+
 // ARCHIVO: App.jsx
 // PROPÓSITO: Este es el componente principal que maneja todas las rutas de la aplicación
 // Usa React Router para navegar entre páginas (Login, Registro, Dashboard)
@@ -7,6 +9,7 @@ import LoginPage from "./components/LoginPage"
 import PetDashboard from "./components/PetDashboard"
 import RegisterPage from "./components/RegisterPage"
 import AdminPanel from "./components/AdminPanel"
+import { useEffect } from "react"
 
 // FUNCIÓN: isAuthenticated
 // PROPÓSITO: Verifica si el usuario tiene un token guardado en localStorage
@@ -32,21 +35,30 @@ const AdminRoute = ({ children }) => {
   const role = localStorage.getItem("role")
   const isAuth = isAuthenticated()
 
+  console.log("[v0] AdminRoute - role:", role, "isAuth:", isAuth)
+
   // Si no está autenticado, redirige a login
   if (!isAuth) {
+    console.log("[v0] AdminRoute - No autenticado, redirigiendo a /login")
     return <Navigate to="/login" />
   }
 
   // Si está autenticado pero no es admin, redirige a dashboard
   if (role !== "ROLE_ADMIN") {
+    console.log("[v0] AdminRoute - No es admin, redirigiendo a /dashboard")
     return <Navigate to="/dashboard" />
   }
 
   // Si es admin, muestra el contenido
+  console.log("[v0] AdminRoute - Es admin, mostrando panel")
   return children
 }
 
 function App() {
+  useEffect(() => {
+    console.log("[v0] App - Ruta actual:", window.location.pathname)
+  }, [window.location.pathname])
+
   return (
     // Router: Envuelve toda la aplicación para habilitar la navegación entre páginas
     <Router>
