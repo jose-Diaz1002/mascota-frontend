@@ -16,11 +16,14 @@ function PetDashboard() {
   const [username, setUsername] = useState("")
   const [userRole, setUserRole] = useState("")
   const [isHovering, setIsHovering] = useState(false)
+  const [backendSaveAvailable, setBackendSaveAvailable] = useState(true)
+  const [backendError, setBackendError] = useState("")
   const navigate = useNavigate()
 
   const happinessIntervalRef = useRef(null)
   const hungerIntervalRef = useRef(null)
   const hoverIntervalRef = useRef(null)
+  const saveIntervalRef = useRef(null)
   const currentPetIdRef = useRef(null)
 
   useEffect(() => {
@@ -39,19 +42,53 @@ function PetDashboard() {
   }, [])
 
   useEffect(() => {
+    if (!activePet || !backendSaveAvailable) {
+      if (saveIntervalRef.current) {
+        clearInterval(saveIntervalRef.current)
+        saveIntervalRef.current = null
+      }
+      return
+    }
+
+    console.log("[v0] Iniciando intervalo de guardado para pet ID:", activePet.id)
+
+    saveIntervalRef.current = setInterval(() => {
+      console.log("[v0] Guardando stats en backend:", {
+        hunger: activePet.hunger,
+        happiness: activePet.happiness,
+      })
+      updatePetStats(activePet.id, {
+        name: activePet.name,
+        hunger: activePet.hunger,
+        happiness: activePet.happiness,
+        color: activePet.color,
+        hat: activePet.hat,
+        shirt: activePet.shirt,
+      })
+    }, 10000)
+
+    return () => {
+      if (saveIntervalRef.current) {
+        console.log("[v0] Limpiando intervalo de guardado")
+        clearInterval(saveIntervalRef.current)
+        saveIntervalRef.current = null
+      }
+    }
+  }, [activePet, backendSaveAvailable])
+
+  useEffect(() => {
     if (!activePet) return
 
     const syncInterval = setInterval(() => {
       console.log("[v0] Sincronizando con backend...")
-      fetchPets()
-    }, 30000)
+      syncWithBackendGradually()
+    }, 10000) // Sincroniza cada 10 segundos
 
     return () => clearInterval(syncInterval)
   }, [activePet])
 
   useEffect(() => {
     if (!activePet) {
-      // Limpiar todos los intervalos si no hay mascota activa
       if (happinessIntervalRef.current) {
         clearInterval(happinessIntervalRef.current)
         happinessIntervalRef.current = null
@@ -68,16 +105,13 @@ function PetDashboard() {
       return
     }
 
-    // Solo reiniciar intervalos si cambió el ID de la mascota
     if (currentPetIdRef.current !== activePet.id) {
       console.log("[v0] Mascota cambió, reiniciando intervalos para pet ID:", activePet.id)
       currentPetIdRef.current = activePet.id
 
-      // Limpiar intervalos anteriores
       if (happinessIntervalRef.current) clearInterval(happinessIntervalRef.current)
       if (hungerIntervalRef.current) clearInterval(hungerIntervalRef.current)
 
-      // Intervalo de felicidad (disminuye cada 10 segundos)
       happinessIntervalRef.current = setInterval(() => {
         setActivePet((prev) => {
           if (!prev) return prev
@@ -87,19 +121,21 @@ function PetDashboard() {
         })
       }, 10000)
 
-      // Intervalo de hambre (aumenta cada 5 segundos)
       hungerIntervalRef.current = setInterval(() => {
         setActivePet((prev) => {
-          if (!prev) return prev
-          const newHunger = Math.min(100, prev.hunger + 1)
-          console.log("[v0] Hambre aumentando:", prev.hunger, "→", newHunger)
+          if (!prev) {
+            console.log("[v0] ADVERTENCIA: prev es null en intervalo de hambre")
+            return prev
+          }
+          const currentHunger = prev.hunger
+          const newHunger = Math.min(100, currentHunger + 2)
+          console.log("[v0] Hambre aumentando:", currentHunger, "→", newHunger, "| Pet ID:", prev.id)
           return { ...prev, hunger: newHunger }
         })
-      }, 5000)
+      }, 2000) // Cambiado de 5000ms a 2000ms y aumenta +2 en lugar de +1
     }
 
     return () => {
-      // Solo limpiar al desmontar el componente
       if (happinessIntervalRef.current) clearInterval(happinessIntervalRef.current)
       if (hungerIntervalRef.current) clearInterval(hungerIntervalRef.current)
     }
@@ -153,20 +189,101 @@ function PetDashboard() {
     }
   }
 
+  const syncWithBackendGradually = async () => {
+    if (!activePet) return
+
+    try {
+      const response = await axios.get("/pets")
+      const backendPets = response.data
+
+      // Actualizar la lista completa de mascotas
+      setPets(backendPets)
+
+      // Encontrar la mascota activa en los datos del backend
+      const backendActivePet = backendPets.find((p) => p.id === activePet.id)
+
+      if (!backendActivePet) {
+        console.log("[v0] Mascota activa no encontrada en backend")
+        return
+      }
+
+      // Calcular la diferencia entre backend y local
+      const hungerDiff = backendActivePet.hunger - activePet.hunger
+      const happinessDiff = backendActivePet.happiness - activePet.happiness
+
+      console.log("[v0] Diferencias detectadas - Hambre:", hungerDiff, "Felicidad:", happinessDiff)
+
+      // Aplicar cambios graduales (máximo 20 puntos por sincronización)
+      const MAX_CHANGE = 20
+
+      let newHunger = activePet.hunger
+      let newHappiness = activePet.happiness
+
+      // Aplicar cambio gradual de hambre
+      if (Math.abs(hungerDiff) > MAX_CHANGE) {
+        // Si la diferencia es mayor a 20, aplicar solo 20 en la dirección correcta
+        newHunger = activePet.hunger + (hungerDiff > 0 ? MAX_CHANGE : -MAX_CHANGE)
+        console.log("[v0] Aplicando cambio gradual de hambre:", activePet.hunger, "→", newHunger)
+      } else if (hungerDiff !== 0) {
+        // Si la diferencia es menor a 20, aplicar toda la diferencia
+        newHunger = backendActivePet.hunger
+        console.log("[v0] Aplicando cambio completo de hambre:", activePet.hunger, "→", newHunger)
+      }
+
+      // Aplicar cambio gradual de felicidad
+      if (Math.abs(happinessDiff) > MAX_CHANGE) {
+        newHappiness = activePet.happiness + (happinessDiff > 0 ? MAX_CHANGE : -MAX_CHANGE)
+        console.log("[v0] Aplicando cambio gradual de felicidad:", activePet.happiness, "→", newHappiness)
+      } else if (happinessDiff !== 0) {
+        newHappiness = backendActivePet.happiness
+        console.log("[v0] Aplicando cambio completo de felicidad:", activePet.happiness, "→", newHappiness)
+      }
+
+      // Actualizar activePet con los nuevos valores graduales
+      setActivePet({
+        ...backendActivePet,
+        hunger: Math.max(0, Math.min(100, newHunger)),
+        happiness: Math.max(0, Math.min(100, newHappiness)),
+      })
+    } catch (err) {
+      console.error("[v0] Error al sincronizar con backend:", err)
+      if (err.response?.status === 401) {
+        navigate("/login")
+      }
+    }
+  }
+
   const updatePetStats = async (petId, stats) => {
     try {
       await axios.put(`/pets/${petId}`, stats)
+      console.log("[v0] Stats guardados exitosamente en backend")
+      if (backendError) {
+        setBackendError("")
+      }
     } catch (err) {
-      if (err.response?.status === 403) {
-        console.warn("No tienes permisos para actualizar esta mascota")
+      if (err.response?.status === 405) {
+        console.error("[v0] ERROR: El backend no soporta el método PUT en /pets/{id}")
+        console.error("[v0] Necesitas agregar el endpoint PUT en PetController.java")
+        setBackendSaveAvailable(false)
+        setBackendError(
+          "El backend no tiene configurado el guardado automático. Los cambios solo se guardarán al cerrar sesión.",
+        )
+      } else if (err.response?.status === 404) {
+        console.error("[v0] ERROR: Endpoint /pets/{id} no encontrado en el backend")
+        setBackendSaveAvailable(false)
+        setBackendError("Endpoint de guardado no encontrado. Los cambios solo se guardarán al cerrar sesión.")
+      } else if (err.response?.status === 403) {
+        console.warn("[v0] No tienes permisos para actualizar esta mascota")
+        setBackendError("No tienes permisos para actualizar esta mascota.")
       } else {
-        console.error("Error al actualizar estadísticas:", err)
+        console.error("[v0] Error al actualizar estadísticas:", err)
       }
     }
   }
 
   const handleCreatePet = async (event) => {
     event.preventDefault()
+    console.log("[v0] handleCreatePet - Iniciando creación de mascota:", newPetName)
     setError("")
 
     if (!newPetName.trim()) {
@@ -175,20 +292,24 @@ function PetDashboard() {
     }
 
     try {
+      console.log("[v0] handleCreatePet - Enviando petición POST /pets")
       const response = await axios.post("/pets", {
         name: newPetName,
-        hunger: 50,
+        hunger: 100,
         happiness: 50,
         color: 0,
       })
 
+      console.log("[v0] handleCreatePet - Mascota creada exitosamente:", response.data)
       setPets([...pets, response.data])
       setActivePet(response.data)
 
       setNewPetName("")
       setShowCreateForm(false)
     } catch (err) {
-      console.error("Error al crear mascota:", err)
+      console.error("[v0] handleCreatePet - Error al crear mascota:", err)
+      console.error("[v0] handleCreatePet - Error status:", err.response?.status)
+      console.error("[v0] handleCreatePet - Error data:", err.response?.data)
       setError("No se pudo crear la mascota. Inténtalo de nuevo.")
     }
   }
@@ -233,8 +354,12 @@ function PetDashboard() {
   const handleLogout = () => {
     if (activePet) {
       updatePetStats(activePet.id, {
+        name: activePet.name,
         hunger: activePet.hunger,
         happiness: activePet.happiness,
+        color: activePet.color,
+        hat: activePet.hat,
+        shirt: activePet.shirt,
       })
     }
 
@@ -260,6 +385,22 @@ function PetDashboard() {
                 Panel Admin
               </button>
             )}
+          </div>
+        )}
+
+        {backendError && (
+          <div
+            className="backend-warning"
+            style={{
+              backgroundColor: "#fff3cd",
+              border: "1px solid #ffc107",
+              borderRadius: "4px",
+              padding: "12px",
+              marginBottom: "16px",
+              color: "#856404",
+            }}
+          >
+            <strong>⚠️ Advertencia:</strong> {backendError}
           </div>
         )}
 
